@@ -1,0 +1,19 @@
+{
+  "appId": "com.bolupy.thezombies",
+  "appName": "The Zombies",
+  "webDir": "www",
+  "backgroundColor": "#0b0d09",
+  "server": {
+    "androidScheme": "http",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "backgroundColor": "#0b0d09"
+  },
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#0b0d09",
+    "scrollEnabled": false
+  }
+}

@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#3a4a32}canvas{image-rendering:pixelated}</style></head><body>
+<canvas id="c"></canvas>
+<script src="../js/core.js"></script><script src="../js/voxel.js"></script><script src="../js/models.js"></script>
+<script>
+const M=TZ.Models; const c=TZ.canvas(800,500); const g=c.g; g.fillStyle='#55683f'; g.fillRect(0,0,800,500);
+const t0=performance.now();
+const pl=M.humanSet({seed:3, skin:[222,174,138], hair:[70,48,32], shirt:[84,98,58], shirt2:[60,70,42], pants:[64,66,56], backpack:[112,94,60], hat:'cap', hatColor:[62,74,46], belt:[60,44,30]});
+const zb=M.humanSet({zombie:true, seed:11, skin:[132,146,112], hair:[60,44,32], hairStyle:'patchy', shirt:[128,64,52], pants:[62,72,98], blood:1, torn:1});
+const br=M.humanSet({zombie:true, build:'big', seed:21, skin:[120,130,104], hair:[40,34,30], hairStyle:'bald', shirt:[70,70,74], pants:[52,56,64], blood:1.4, torn:1.2, sleeves:false});
+const sp=M.humanSet({zombie:true, build:'bloated', seed:31, skin:[130,150,96], hair:[70,80,50], hairStyle:'patchy', shirt:[160,150,120], pants:[60,60,70], blood:.3, torn:1, bloated:true, eyes:[200,240,60]});
+const nk=M.humanSet({seed:7, skin:[226,186,156], hair:[30,26,30], hairStyle:'long', shirt:[50,52,56], pants:[60,62,52], hat:'band', hatColor:[180,40,40], vest:[70,76,56]});
+const cr=M.crawlerSet({seed:4, skin:[140,150,120], shirt:[74,84,116], pants:[84,70,52], hair:[30,26,24]});
+let y=4;
+for(const s of [pl,zb,br,sp,nk]){ let x=4; for(let d=0;d<8;d++){ const f=s.get('walk', d%8, d, s===pl?'two':''); g.drawImage(f.c,x,y); x+=f.c.width-6;} const a=s.get('attack',1,1); g.drawImage(a.c,x+4,y); const dd=s.get('dead',0,2); g.drawImage(dd.c,x+50,y); y+= s.model.H-4; }
+let x=4; for(let d=0;d<8;d++){const f=cr.get('walk',d,d); g.drawImage(f.c,x,y); x+=40;}
+for(const k of ['deer','wolf','bear']){const a=M.animalSet(k,2); for(let d=0;d<3;d++){const f=a.get('walk',d*2,d*2+1); g.drawImage(f.c,x,y-10); x+=f.c.width-10;}}
+y+=40; x=4;
+const vk=['sedan','pickup','police','uaz','buggy','snowmobile','hatch'];
+for(let i=0;i<vk.length;i++){const v=M.vehicleSet(vk[i],null,i); const f=v.get(i%3,0,(i*3)%16); g.drawImage(f.c,x,y); x+=105;}
+y+=70;x=4; const v=M.vehicleSet('sedan',null,1); for(let d=0;d<16;d++){const f=v.get(0,0,d); g.drawImage(f.c,x,y); x+=48;}
+y+=60;x=4; for(const t of ['wood','metal','code']) for(let o=0;o<5;o+=2) for(const ax of [0,1]){ const r=M.gate(t,ax,o); g.drawImage(r.c,x,y); x+=46;}
+document.title='ms '+Math.round(performance.now()-t0);
+const out=document.getElementById('c'); out.width=1600; out.height=1000; const o=out.getContext('2d'); o.imageSmoothingEnabled=false; o.drawImage(c,0,0,1600,1000);
+</script></body></html>

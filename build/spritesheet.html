@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><style>body{margin:0;background:#2a2a2a}canvas{image-rendering:pixelated}</style></head><body>
+<canvas id="c"></canvas>
+<script src="../js/core.js"></script><script src="../js/data.js"></script><script src="../js/art_world.js"></script><script src="../js/art_chars.js"></script>
+<script>
+const A=TZ.art; A.buildTiles();A.buildDecor();A.buildTrees();A.buildDecals();A.buildCharacters();A.buildWeapons();A.buildIcons();
+const c=TZ.canvas(640,420); const g=c.g; g.fillStyle='#3a3f3a'; g.fillRect(0,0,640,420);
+// ground grid
+for(let y=0;y<6;y++)for(let x=0;x<6;x++){const t=[0,0,8,1,3,4][y]; g.drawImage(A.tiles[x<3?t:[2,5,6,9,7,10][y]][(x+y)%4], 120+(x-y)*16-16, 10+(x+y)*8);}
+let X=8; const put=(s,y=120)=>{ if(s.c){g.drawImage(s.c,X,y-s.c.height);X+=s.c.width+2;} else {g.drawImage(s,X,y-s.height);X+=s.width+2;} };
+put(A.palisade(0));put(A.palisade(1));put(A.gate(0));put(A.stoneWall(0));put(A.metalWall(0));put(A.sandbags(0));put(A.houseWall(0,0,1,0));put(A.houseWall(1,1,2,1));put(A.houseWall(2,2,0,0));put(A.houseWall(3,1,1,1));put(A.crate(0));put(A.crate(1));put(A.crate(2));put(A.barrel([150,60,44]));
+X=230; for(const t of [A.trees.pine[0],A.trees.oak[0],A.trees.oak[1],A.trees.oak[2],A.trees.dead[0],A.trees.bush[0],A.trees.rock[0],A.trees.scrap[0]]) put(t,70);
+X=8; put(A.car([150,60,40],0,1),180);put(A.car([60,80,120],1,0),180);put(A.car([30,30,34],0,0,'police'),180);put(A.car([86,96,58],0,1,'truck'),180);put(A.bus(0),180);
+X=8; for(const k of ['cabinet']) {put(A.cabinet(0),235);put(A.cabinet(1),235);put(A.cabinet(2),235);put(A.cabinet(3),235);put(A.cabinet(4),235);} put(A.workbench(),235);put(A.bed(),235);put(A.chest(),235);put(A.collector(),235);put(A.garden(3),235);put(A.spikes(),235);put(A.campfireBase(),235);put(A.torchBase(),235);put(A.floodlight(),235);put(A.turretBase(),235);put(A.radio(),235);put(A.barrier(0),235);put(A.fence(0),235);put(A.lamppost(),235);put(A.pole(),235);put(A.sign(),235);
+X=8; const C=A.chars; const row=[C.player,...C.walker.slice(0,6),...C.runner.slice(0,2),C.brute[0],C.spitter[0],C.crawler[0],...Object.values(C.surv)];
+for(const s of row){ g.drawImage(s.front.walk[0],X,250); g.drawImage(s.back.walk[2],X,250+(s.front.walk[0].height)+2); X+=s.front.walk[0].width+1;}
+X=8; for(const s of [C.player,C.walker[0],C.brute[0]]) for(const a of ['idle','walk','attack']) for(const f of s.front[a]){g.drawImage(f,X,330);X+=f.width;}
+g.drawImage(C.boss[0].front.walk[1],X+4,300);
+X=8; for(const k in A.weapons) if(A.weapons[k]) put(A.weapons[k],410);
+X=250; for(const k in A.icons) put(A.icons[k],410);
+const out=document.getElementById('c'); out.width=1920; out.height=1260; const o=out.getContext('2d'); o.imageSmoothingEnabled=false; o.drawImage(c,0,0,1920,1260);
+window.DONE=1;
+</script></body></html>

@@ -1,0 +1,21 @@
+{
+  "name": "the-zombies-mobile",
+  "version": "4.1.0",
+  "private": true,
+  "description": "The Zombies — Android и iPhone (Capacitor). Игра берётся из корневой папки проекта.",
+  "scripts": {
+    "web": "node scripts/copy-web.mjs",
+    "sync": "node scripts/copy-web.mjs && npx cap sync",
+    "android": "node scripts/copy-web.mjs && npx cap sync android && npx cap open android",
+    "ios": "node scripts/copy-web.mjs && npx cap sync ios && npx cap open ios",
+    "apk": "node scripts/copy-web.mjs && npx cap sync android && cd android && ./gradlew assembleDebug"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
+  }
+}
