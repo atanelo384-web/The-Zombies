@@ -7,7 +7,10 @@ name: Build phone apps
 on:
   workflow_dispatch:
   push:
+    branches: [main]
     tags: ['v*']
+permissions:
+  contents: write
 
 jobs:
   android:
@@ -44,3 +47,10 @@ jobs:
           zip -qr TheZombies-unsigned.ipa Payload
       - uses: actions/upload-artifact@v4
         with: { name: TheZombies-iphone, path: mobile/TheZombies-unsigned.ipa }
+      # also keep the IPA in the "builds" branch so it can be fetched with plain git
+      - name: Publish IPA to the builds branch
+        run: |
+          mkdir -p /tmp/pub && cp TheZombies-unsigned.ipa /tmp/pub/
+          cd /tmp/pub && git init -q -b builds && git add TheZombies-unsigned.ipa
+          git -c user.name=github-actions -c user.email=actions@github.com commit -qm "IPA ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" builds
