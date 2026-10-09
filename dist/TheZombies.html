@@ -681,6 +681,32 @@ body.mobile .mfoot { left: auto; right: 14px; width: auto; }
 
 #touch .airb { display: none !important; } #touch.air .airb { display: flex !important; } #touch.air .gnd { display: none !important; }
 
+/* ---- 4.2 clans ---- */
+.ctag, .clbadge { display: inline-block; padding: 0 6px; color: #fff; background: color-mix(in srgb, var(--cc) 70%, #000); border: 1px solid #050605; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), inset 3px 0 0 var(--cc); text-shadow: 1px 1px 0 #000; font-weight: normal; }
+.ctag { font-size: 14px; line-height: 1.3; }
+.clbadge { font-size: 22px; padding: 2px 12px; }
+.prow { grid-template-columns: 56px 1fr 120px 110px 70px auto; }
+.prow .clinv { white-space: nowrap; }
+.phead-r { display: flex; gap: 8px; align-items: center; }
+.clanbox { width: 860px; min-height: 420px; }
+#clanbody { padding: 4px 8px 8px; }
+.clhead { display: flex; align-items: center; gap: 14px; padding: 8px 10px; margin-bottom: 8px; background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 25%, transparent), transparent); box-shadow: inset 4px 0 0 var(--cc); }
+.clcols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.clmembers { max-height: 300px; display: flex; flex-direction: column; gap: 3px; }
+.clmem { display: flex; align-items: center; gap: 8px; padding: 4px 8px; background: rgba(255,255,255,.03); border-left: 3px solid #2e3226; font-size: 17px; }
+.clmem .cldot { width: 9px; height: 9px; background: #555; box-shadow: 0 0 0 1px #000; }
+.clmem.on .cldot { background: #58c068; box-shadow: 0 0 6px #58c068; }
+.clmem .clmn { flex: 1; } .clmem .clst { color: var(--dim); font-size: 13px; }
+.clmem .host { color: var(--hi); font-size: 13px; }
+.clmem .px-btn.small { font-size: 13px; padding: 0 6px; }
+.clcolors { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 8px; }
+.clc { width: 32px; height: 32px; background: var(--cc); border: 2px solid #050605; box-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(0,0,0,.3); }
+.clc.on { outline: 3px solid #fff; outline-offset: 1px; }
+.clc:disabled { opacity: .5; }
+.cl-row { display: flex; flex-direction: column; gap: 4px; font-size: 16px; color: var(--dim); margin-bottom: 6px; }
+.clannew { max-width: 520px; margin: 0 auto; }
+@media (max-width: 1000px) { .clcols { grid-template-columns: 1fr; } }
+
 </style>
 </head>
 <body>
@@ -757,9 +783,13 @@ body.mobile .mfoot { left: auto; right: 14px; width: auto; }
   </div></div>
 
   <div id="plist" class="modal light"><div class="mbox px-panel wide">
-    <div class="phead"><span id="plisttitle">Игроки на сервере</span> <button class="px-x" data-close="plist"></button></div>
+    <div class="phead"><span id="plisttitle">Игроки на сервере</span> <span class="phead-r"><button class="px-btn small" id="btnClan2">Клан</button><button class="px-x" data-close="plist"></button></span></div>
     <div id="plistbody" class="scroll"></div>
     <div class="phint">Нажмите на игрока, чтобы открыть его профиль. Закрыть — F3.</div>
+  </div></div>
+  <div id="clanp" class="modal light"><div class="mbox px-panel wide clanbox">
+    <div class="phead">Клан <button class="px-x" data-close="clanp"></button></div>
+    <div id="clanbody" class="scroll"></div>
   </div></div>
   <div id="bigmap" class="modal"><div class="mbox px-panel mapbox">
     <div class="phead">Карта мира <span class="sub inline" id="mapcoords"></span><button class="px-x" data-close="bigmap"></button></div>
@@ -773,6 +803,7 @@ body.mobile .mfoot { left: auto; right: 14px; width: auto; }
       <button class="px-btn big" id="btnResume">Продолжить</button>
       <button class="px-btn big" id="btnSave">Сохранить мир</button>
       <button class="px-btn big" id="btnInvite">Пригласить друзей</button>
+      <button class="px-btn big" id="btnClan">Клан</button>
       <button class="px-btn big" id="btnSettings2">Настройки</button>
       <button class="px-btn big" id="btnHelp2">Как играть</button>
       <button class="px-btn big ghost" id="btnMenu">Выйти в меню</button>
@@ -820,8 +851,9 @@ body.mobile .mfoot { left: auto; right: 14px; width: auto; }
     <div id="acccard" class="px-panel" title="Открыть профиль"></div>
     <div class="px-panel dailyp"><div class="phead small">Задания дня <span class="sub inline">обновляются каждый день</span></div><div id="dailylist"></div></div>
     <div class="px-panel news">
-      <div class="phead small"><span>Обновление <span class="gold">4.1</span> · 4.0</span></div>
+      <div class="phead small"><span>Обновление <span class="gold">4.2</span> · 4.1 · 4.0</span></div>
       <ul class="scroll">
+        <li><b>Кланы</b> в мультиплеере: название, цвет, PvP, приглашения, клановый чат /c и соклановцы на карте</li>
         <li><b>Вертолёты и самолёты</b>: Ми-2 и Ан-2 на аэродромах и военных базах (редко) или свой из труб</li>
         <li><b>Лодки и катера</b>: лодку собирают у воды, катер можно только найти у озёр</li>
         <li><b>Дома и крыши</b>: кирпичные стены, двери с кодом и без. Снаружи крыша скрывает дом, внутри исчезает</li>
@@ -993,6 +1025,8 @@ body.mobile .mfoot { left: auto; right: 14px; width: auto; }
       <p><b>Металлоискатель</b> в руках пищит у закопанного тайника — копайте <b>лопатой</b>. <b>Лук</b> и <b>копьё</b> делаются руками, <b>гвоздемёт</b>, <b>гранатомёт</b> и <b>рация</b> — на верстаке. <b>Факел</b> светит и поджигает.</p>
       <p><b>Багги</b>: соберите в гараже (это дорого), затем в меню машины у гаража ставьте улучшения: двигатель I и II, таран, шипы, броня, бак, вездеходные шины, прожекторы.</p>
       <p><b>Голос</b>: игроков рядом слышно всегда. С <b>рацией</b> вас слышат все, у кого она есть. Сообщение по рации в чате: <kbd>/r</kbd> текст.</p>
+      <h3>Кланы (мультиплеер)</h3>
+      <p><kbd>K</kbd> или F3 → «Клан» — создать клан: название и цвет. Приглашение — кнопка «В клан» в списке игроков (F3). Глава меняет название, цвет, PvP клана и показ соклановцев на карте, может исключать и передавать главенство. Свои никогда не ранят друг друга. Клановый чат: <kbd>/c</kbd> текст. Название клана видно в чате и над головой.</p>
       <h3>Новое в 4.1</h3>
       <p><b>Дом</b>: вкладка «Дом» в стройке — кирпичные стены (кирпич обжигают на костре), стены с окном, двери обычные и с кодом, деревянные и бетонные крыши. Крыше нужна опора — стена рядом. <kbd>X</kbd> снимает сначала крышу.</p>
       <p><b>Вертолёт</b>: <kbd>Shift</kbd> — вверх, <kbd>Пробел</kbd> — вниз, сначала дайте винту раскрутиться. <b>Самолёт</b>: разгон по ровному месту, затем <kbd>Shift</kbd>; садитесь медленно. Свой вертолёт или самолёт собирают в гараже из труб (верстак: металл → трубы).</p>
@@ -3340,7 +3374,7 @@ var qrcode = function() {
 'use strict';
 const TZ = window.TZ = {};
 
-TZ.VERSION = '4.1.0';
+TZ.VERSION = '4.2.0';
 TZ.TW = 32;            // iso tile width  (virtual px)
 TZ.TH = 16;            // iso tile height (virtual px)
 
@@ -3455,7 +3489,7 @@ TZ.BINDS = [
   ['light', 'Фонарик', ['KeyL']], ['team', 'Приказ команде', ['KeyF']], ['ping', 'Метка на карте', ['KeyG']], ['voice', 'Голос (рация, удерживать)', ['KeyZ']],
   ['inv', 'Инвентарь', ['Tab', 'KeyI']], ['craft', 'Крафт', ['KeyC']], ['build', 'Стройка', ['KeyB']], ['demolish', 'Разобрать (в стройке)', ['KeyX']],
   ['map', 'Карта мира', ['KeyM']], ['chat', 'Чат', ['KeyT', 'Enter']], ['cmd', 'Команда в чате', ['Slash']], ['phrases', 'Быстрые фразы', ['KeyV']],
-  ['players', 'Список игроков', ['F3']], ['help', 'Справка', ['F1']], ['brake', 'Ручник (в машине)', ['Space']], ['horn', 'Сигнал (в машине)', ['KeyH']],
+  ['players', 'Список игроков', ['F3']], ['clan', 'Клан (в мультиплеере)', ['KeyK']], ['help', 'Справка', ['F1']], ['brake', 'Ручник (в машине)', ['Space']], ['horn', 'Сигнал (в машине)', ['KeyH']],
 ];
 TZ.defAct = {}; for (const [a, , c] of TZ.BINDS) for (const k of c) if (!TZ.defAct[k]) TZ.defAct[k] = a;
 TZ.keyName = (c) => !c ? '—' : c.startsWith('Key') ? c.slice(3) : c.startsWith('Digit') ? c.slice(5) : c.startsWith('Numpad') ? 'Num ' + c.slice(6) : ({ ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', ShiftLeft: 'Shift', ShiftRight: 'П.Shift', ControlLeft: 'Ctrl', ControlRight: 'П.Ctrl', AltLeft: 'Alt', AltRight: 'П.Alt', Space: 'Пробел', Enter: 'Enter', Tab: 'Tab', Slash: '/', Backquote: '`', CapsLock: 'Caps', Backspace: '←Bksp', Mouse3: 'Колесо', Mouse4: 'Мышь 4', Mouse5: 'Мышь 5' })[c] || c;
@@ -8623,7 +8657,7 @@ class Game {
     this.camera = { x: 0, y: 0, sx: 0, sy: 0, amt: 0, zoom: 0, shake(n) { if (TZ.settings.shake) this.amt = Math.max(this.amt, n); } };
     this.zgrid = new TZ.Grid(1, 2); this._tmpA = []; this._tmpB = []; this._tmpC = [];
     this.mouseWorld = { x: 0, y: 0 }; this.mode = 'play'; this.paused = false; this.uiBlocking = false; this.canControl = true; this.typing = false;
-    this.players = new Map(); this.zombies = []; this.allies = []; this.animals = []; this.vehicles = []; this.pickups = []; this.structures = new Set();
+    this.clans = []; this.players = new Map(); this.zombies = []; this.allies = []; this.animals = []; this.vehicles = []; this.pickups = []; this.structures = new Set();
     this.evq = []; this._nid = 1;
     this.flows = new Map(); this.flowT = 0; this.dirtyFlow = true; this.directorT = 2; this.questT = 0; this.saveT = 60;
     this.horde = null; this.evacDay = 0; this.heli = null; this.won = false; this.endless = false;
@@ -8737,6 +8771,7 @@ class Game {
   hurtPlayer(p, n, o = {}) {
     if (!p || p.dead || p.vehicle) return;
     if (o.by && p.pid === o.by) return;
+    if (o.by && this.clanBlocksDamage && this.clanBlocksDamage(o.by, p)) return; // clans: no friendly fire, peaceful clans
     this.toPlayer(p.pid, 'hurt', { n, bleed: o.bleed, inf: o.inf, chill: o.chill, dry: o.dry, push: o.push, acid: o.acid, silent: o.silent, by: o.by });
   }
   healEntity(t, n) { if (t.kind === 'player') this.toPlayer(t.pid, 'heal', { n }); else t.hp = Math.min(t.maxHp, t.hp + n); this.ev('text', t.x, t.y, '+' + n, '#7dff8a'); }
@@ -8748,6 +8783,8 @@ class Game {
     const P = this.me;
     switch (type) {
       case 'vsig': TZ.Voice.onSignal(d.from, d.data); break;
+      case 'clanInvite': TZ.ClanUI.invited(this, d); break;
+      case 'clanChat': this.ui.chatMsg('[клан] ' + d.name, d.text, d.color); break;
       case 'radioChat': if (this.count('walkie') || d.name === P.name) { this.ui.chatMsg('[рация] ' + d.name, d.text, '#e8b030'); TZ.audio.play('radio_on', 0.5); } break;
       case 'vstate': TZ.Voice.onState(d.from, d); break;
       case 'give': this.receive(d.items, d.x, d.y); break;
@@ -8806,7 +8843,7 @@ class Game {
       case 'molotov': fx.decal(a, b, TZ.art.scorch, 120); fx.sparks(a, b, 12, '#ffb040', 4); if (!this.auth) this.combat.fires.push({ x: a, y: b, r: 1.9, life: 7, max: 7 }); break;
       case 'shot': if (!this.auth && e[5] !== this.me.pid) this.combat.remoteShot(a, b, c, d); break;
       case 'zdie': TZ.audio.zdie(b, this.audioVol(c, d)); fx.blood(c, d, 12, 1.2); fx.decal(c, d, TZ.art.blood[(Math.random() * 6) | 0], 200); break;
-      case 'chat': this.ui.chatMsg(a, b, c); break;
+      case 'chat': this.ui.chatMsg(a, b, c, d, f); break;
       case 'sys': this.msg(a, b); break;
       case 'banner': this.ui.banner(a, b); break;
       case 'heli': TZ.audio.play('heli'); break;
@@ -8868,7 +8905,8 @@ class Game {
       case 'craftVeh': { const r = TZ.VEHICLE_RECIPES.find(r => r.out === d.vk); if (!r) return;
         if (TZ.VEHICLES[d.vk].water) { const v = new TZ.Vehicle(this, d.vk, p.x, p.y, 0, 'new'); let ok = false; for (let rr = 1; rr < 11 && !ok; rr++) for (let k = 0; k < 24 && !ok; k++) { const a = k / 24 * 6.28, x = p.x + Math.cos(a) * rr, y = p.y + Math.sin(a) * rr; if (!v.blocked(W, x, y, a)) { v.x = x; v.y = y; v.a = a; ok = true; } } if (!ok) { this.giveTo(pid, r.cost); this.hintTo(pid, 'Лодку можно собрать только у воды (до 10 клеток)'); return; } v.owner = p.uid; this.vehicles.push(v); this.ev('banner', 'ЛОДКА ГОТОВА', r.name); break; }
         const pos = this.findFree(d.x, d.y, 4, 'veh'); if (!pos) { this.giveTo(pid, r.cost); this.hintTo(pid, 'Нет места для машины'); return; } const v = new TZ.Vehicle(this, d.vk, pos.x, pos.y, 0, 'new'); v.owner = p.uid; this.vehicles.push(v); this.ev('banner', 'МАШИНА СОБРАНА', r.name); break; }
-      case 'chat': { const txt = String(d.text || '').slice(0, 160); if (!txt) return; const color = TZ.Account.rankOf((p.profile && p.profile.rn) || 1000).color; if (d.radio) { for (const q of this.players.values()) this.toPlayer(q.pid, 'radioChat', { name: p.name, text: txt }); break; } this.ev('chat', p.name, txt, color); break; }
+      case 'clan': this.clanAct(pid, d); break;
+      case 'chat': { const txt = String(d.text || '').slice(0, 160); if (!txt) return; const color = TZ.Account.rankOf((p.profile && p.profile.rn) || 1000).color; if (d.radio) { for (const q of this.players.values()) this.toPlayer(q.pid, 'radioChat', { name: p.name, text: txt }); break; } const cl = this.clanOf(p.uid); this.ev('chat', p.name, txt, color, cl ? cl.name : 0, cl ? cl.color : 0); break; }
       case 'pvpDeath': { const killer = this.players.get(d.by); if (killer) { this.toPlayer(d.by, 'stat', { k: 'pvpKills', n: 1 }); this.ev('sys', `${killer.name} убил ${p.name}`, 'bad'); if (this.net) this.net.elo(d.by, pid); } break; }
       case 'respawned': break;
       case 'fish': {
@@ -9827,7 +9865,7 @@ class Game {
       allies: this.allies.filter(a => !a.dead).map(a => a.serialize()),
       vehicles: this.vehicles.map(v => v.serialize()),
       dogs: this.animals.filter(a => a.owner && !a.dead).map(a => ({ x: +a.x.toFixed(2), y: +a.y.toFixed(2), owner: a.owner, mode: a.mode, hp: Math.round(a.hp) })),
-      quest: this.quest, stats: this.stats, evacDay: this.evacDay, endless: this.endless, nid: this._nid,
+      clans: this.clans || [], quest: this.quest, stats: this.stats, evacDay: this.evacDay, endless: this.endless, nid: this._nid,
     };
   }
   save(auto, quiet) {
@@ -9843,6 +9881,7 @@ class Game {
     this.minutes = d.minutes; this.day = d.day; this.quest = d.quest || this.quest; this.stats = Object.assign(this.stats, d.stats || {}); this.evacDay = d.evacDay || 0; this.endless = !!d.endless; this._nid = d.nid || 1;
     this.spawnPoint = d.spawn || { x: 70.5, y: 74.5 };
     this.playerData = d.playerData || {};
+    this.clans = (d.clans || []).filter(c => c && c.members && c.members.length);
     const pd = this.playerData[this.me.uid];
     if (pd) { this.me.load(pd); this.me.look = TZ.Account.active().look || this.me.look; } else { this.me.x = this.spawnPoint.x; this.me.y = this.spawnPoint.y; }
     // pre-generate around the player so saved entities have ground
@@ -9856,6 +9895,189 @@ class Game {
 const diffCost = (cost, rest) => { const o = {}; for (const k in cost) { const n = cost[k] - (rest[k] || 0); if (n > 0) o[k] = n; } return o; };
 TZ.BUILD_ORDER2 = () => Object.keys(TZ.BUILD);
 TZ.Game = Game;
+})();
+
+// =====================================================================
+//  THE ZOMBIES 4.2 — clans (multiplayer)
+//  Clans live on the host and are saved with the world. Each clan has a
+//  name, a colour, a PvP switch and a "show members on the map" switch.
+//  Members never hurt each other; the clan tag is shown in chat, above
+//  heads and in the player list. Clan chat: /c text.
+// =====================================================================
+'use strict';
+(() => {
+const $ = s => document.querySelector(s), esc = s => TZ.esc(s);
+const COLORS = ['#e04a3a', '#e8902a', '#e8d040', '#58c068', '#3cc0a8', '#40a8e8', '#4a6ae8', '#a060e0', '#e060a8', '#d8d8d0'];
+TZ.CLAN_COLORS = COLORS;
+const MAX = 16;
+const P = TZ.Game.prototype;
+P.clanOf = function (uid) { if (!uid || !this.clans) return null; for (const c of this.clans) if (c.members.includes(uid)) return c; return null; };
+P.sameClan = function (a, b) { const c = this.clanOf(a); return !!c && a !== b && c.members.includes(b); };
+P.syncClans = function () {
+  this.clansVer = (this.clansVer || 0) + 1;
+  if (this.net && this.role === 'host') this.net.broadcast('clans', this.clans || []);
+  if (this.ui && this.ui.onClans) this.ui.onClans(this);
+};
+P.clanCmd = function (op, d = {}) { this.act('clan', Object.assign({ op }, d)); };
+// authority: every clan change goes through here
+P.clanAct = function (pid, d) {
+  const p = this.players.get(pid); if (!p || !d) return;
+  this.clans = this.clans || [];
+  const uid = p.uid, mine = this.clanOf(uid);
+  const clean = (s) => String(s || '').replace(/[<>&"]/g, '').replace(/\s+/g, ' ').trim().slice(0, 16);
+  const taken = (n, self) => this.clans.some(c => c !== self && c.name.toLowerCase() === n.toLowerCase());
+  switch (d.op) {
+    case 'create': {
+      if (!this.net) return this.hintTo(pid, 'Кланы работают в мультиплеере');
+      if (mine) return this.hintTo(pid, 'Вы уже состоите в клане');
+      const n = clean(d.name); if (n.length < 2) return this.hintTo(pid, 'Название клана — от 2 символов');
+      if (taken(n)) return this.hintTo(pid, 'Клан с таким названием уже есть');
+      const c = { id: 'k' + Date.now().toString(36) + ((Math.random() * 1e4) | 0), name: n, color: COLORS.includes(d.color) ? d.color : COLORS[0], owner: uid, members: [uid], names: { [uid]: p.name }, pvp: true, markers: true, made: Date.now() };
+      this.clans.push(c); this.ev('sys', `${p.name} основал клан «${n}»`, 'good'); this.toPlayer(pid, 'stat', { k: 'clanMade', n: 1 });
+      break;
+    }
+    case 'edit': {
+      if (!mine || mine.owner !== uid) return this.hintTo(pid, 'Менять настройки может только глава клана');
+      if (d.name != null) { const n = clean(d.name); if (n.length >= 2 && !taken(n, mine)) mine.name = n; else if (n !== mine.name) this.hintTo(pid, 'Это название занято или слишком короткое'); }
+      if (COLORS.includes(d.color)) mine.color = d.color;
+      if (d.pvp != null) { mine.pvp = !!d.pvp; for (const u of mine.members) this.msgTo(u, mine.pvp ? `Клан «${mine.name}»: PvP включено — вы можете сражаться с другими игроками` : `Клан «${mine.name}»: PvP выключено — клан не участвует в боях с игроками`, 'warn'); }
+      if (d.markers != null) mine.markers = !!d.markers;
+      break;
+    }
+    case 'invite': {
+      if (!mine) return this.hintTo(pid, 'Сначала создайте клан');
+      const t = this.players.get(d.pid); if (!t || t === p) return;
+      if (this.clanOf(t.uid)) return this.hintTo(pid, `${t.name} уже состоит в клане`);
+      if (mine.members.length >= MAX) return this.hintTo(pid, `В клане может быть не больше ${MAX} игроков`);
+      this.clanInv = this.clanInv || {};
+      this.clanInv[t.uid] = { id: mine.id, t: Date.now() };
+      this.toPlayer(t.pid, 'clanInvite', { id: mine.id, name: mine.name, color: mine.color, from: p.name });
+      this.msgTo(uid, `Приглашение в клан отправлено: ${t.name}`, 'good');
+      return;
+    }
+    case 'accept': {
+      const inv = this.clanInv && this.clanInv[uid];
+      if (!inv || inv.id !== d.id || Date.now() - inv.t > 5 * 60000) return this.hintTo(pid, 'Приглашение устарело');
+      delete this.clanInv[uid];
+      if (mine) return this.hintTo(pid, 'Сначала покиньте свой клан');
+      const c = this.clans.find(c => c.id === d.id); if (!c) return this.hintTo(pid, 'Этого клана больше нет');
+      if (c.members.length >= MAX) return this.hintTo(pid, 'Клан заполнен');
+      c.members.push(uid); c.names[uid] = p.name;
+      this.ev('sys', `${p.name} вступил в клан «${c.name}»`, 'good');
+      break;
+    }
+    case 'decline': { const inv = this.clanInv && this.clanInv[uid]; if (inv) { delete this.clanInv[uid]; const c = this.clans.find(c => c.id === inv.id); if (c) this.msgTo(c.owner, `${p.name} отклонил приглашение в клан`, 'warn'); } return; }
+    case 'leave': {
+      if (!mine) return;
+      mine.members = mine.members.filter(u => u !== uid); delete mine.names[uid];
+      this.ev('sys', `${p.name} покинул клан «${mine.name}»`, 'warn');
+      if (!mine.members.length) this.clans = this.clans.filter(c => c !== mine);
+      else if (mine.owner === uid) { mine.owner = mine.members[0]; this.msgTo(mine.owner, `Теперь вы глава клана «${mine.name}»`, 'good'); }
+      break;
+    }
+    case 'kick': {
+      if (!mine || mine.owner !== uid || d.uid === uid || !mine.members.includes(d.uid)) return;
+      mine.members = mine.members.filter(u => u !== d.uid); const nm = mine.names[d.uid]; delete mine.names[d.uid];
+      this.msgTo(d.uid, `Вас исключили из клана «${mine.name}»`, 'bad');
+      for (const u of mine.members) this.msgTo(u, `${nm || 'Игрок'} исключён из клана`, 'warn');
+      break;
+    }
+    case 'lead': {
+      if (!mine || mine.owner !== uid || !mine.members.includes(d.uid)) return;
+      mine.owner = d.uid; for (const u of mine.members) this.msgTo(u, `Новый глава клана: ${mine.names[d.uid] || ''}`, 'good');
+      break;
+    }
+    case 'disband': {
+      if (!mine || mine.owner !== uid) return;
+      this.clans = this.clans.filter(c => c !== mine);
+      this.ev('sys', `Клан «${mine.name}» распущен`, 'warn');
+      break;
+    }
+    case 'chat': {
+      if (!mine) return this.hintTo(pid, 'Вы не состоите в клане');
+      const txt = String(d.text || '').slice(0, 160); if (!txt) return;
+      for (const u of mine.members) { const q = this.playerByUid(u); if (q) this.toPlayer(q.pid, 'clanChat', { name: p.name, text: txt, color: mine.color, clan: mine.name }); }
+      return;
+    }
+    default: return;
+  }
+  this.syncClans();
+};
+// clan rules for player-vs-player damage (true = blocked)
+P.clanBlocksDamage = function (attackerPid, victim) {
+  const a = this.players.get(attackerPid); if (!a || a === victim) return false;
+  if (this.sameClan(a.uid, victim.uid)) return true;
+  const ca = this.clanOf(a.uid), cv = this.clanOf(victim.uid);
+  return !!((ca && !ca.pvp) || (cv && !cv.pvp));
+};
+// keep member names fresh (shown for offline members too)
+P.clanTouchNames = function () { for (const c of this.clans || []) for (const p of this.players.values()) if (c.members.includes(p.uid) && c.names[p.uid] !== p.name) c.names[p.uid] = p.name; };
+
+// ---------------------------------------------------------------- UI
+const UI = TZ.ClanUI = {
+  open() {
+    const G = TZ.game; if (!G || G.demo) return;
+    $('#clanp').classList.add('show'); TZ.audio.play('ui_open'); UI.render(G);
+  },
+  close() { $('#clanp').classList.remove('show'); },
+  toggle() { if ($('#clanp').classList.contains('show')) UI.close(); else UI.open(); },
+  render(G) {
+    const box = $('#clanbody'); if (!box) return;
+    const me = G.me, c = G.clanOf(me.uid);
+    if (!G.net) { box.innerHTML = '<div class="empty">Кланы работают в мультиплеере.<br>Запустите сервер или подключитесь к другу.</div>'; return; }
+    if (!c) {
+      const sel = UI._color || COLORS[(Math.random() * COLORS.length) | 0]; UI._color = sel;
+      box.innerHTML = `<div class="clannew">
+        <div class="flabel big">Создать клан</div>
+        <label class="cl-row">Название<input id="clanname" class="px-input" maxlength="16" placeholder="например: Волки"></label>
+        <div class="flabel">Цвет клана</div>
+        <div class="clcolors">${COLORS.map(col => `<button class="clc ${col === sel ? 'on' : ''}" data-col="${col}" style="--cc:${col}"></button>`).join('')}</div>
+        <div class="mbtns row"><button class="px-btn big green" id="clancreate">Создать клан</button></div>
+        <p class="shint">В клан приглашают через список игроков (F3) — кнопка «В клан» рядом с игроком. Соклановцы не наносят друг другу урон, видят друг друга на карте и пишут в клановый чат командой <kbd>/c</kbd>.</p>
+      </div>`;
+      box.querySelectorAll('.clc').forEach(b => b.onclick = () => { UI._color = b.dataset.col; box.querySelectorAll('.clc').forEach(x => x.classList.toggle('on', x === b)); TZ.audio.play('ui'); });
+      $('#clancreate').onclick = () => { const n = $('#clanname').value.trim(); if (n.length < 2) { $('#clanname').focus(); TZ.audio.play('error'); return; } G.clanCmd('create', { name: n, color: UI._color }); TZ.audio.play('craft'); };
+      return;
+    }
+    const lead = c.owner === me.uid;
+    const online = new Set([...G.players.values()].map(p => p.uid));
+    const members = c.members.map(u => `<div class="clmem ${online.has(u) ? 'on' : ''}"><span class="cldot"></span><span class="clmn">${esc(c.names[u] || 'Игрок')}</span>${u === c.owner ? '<span class="host">ГЛАВА</span>' : ''}${u === me.uid ? '<span class="host">ВЫ</span>' : ''}<span class="clst">${online.has(u) ? 'в игре' : 'не в сети'}</span>${lead && u !== me.uid ? `<button class="px-btn small" data-lead="${u}">Главой</button><button class="px-btn small red" data-kick="${u}">Исключить</button>` : ''}</div>`).join('');
+    box.innerHTML = `<div class="clhead" style="--cc:${c.color}"><span class="clbadge">${esc(c.name)}</span><span class="sub inline">${c.members.length} / ${MAX} · ${c.pvp ? 'PvP включено' : 'мирный клан'}</span></div>
+      <div class="clcols">
+        <div><div class="flabel">Участники</div><div class="clmembers scroll">${members}</div>
+          <p class="shint">Пригласить: F3 → «В клан» рядом с игроком. Клановый чат: <kbd>/c</kbd> текст.</p></div>
+        <div class="clset">
+          <div class="flabel">Настройки${lead ? '' : ' <small>(меняет глава)</small>'}</div>
+          <label class="cl-row">Название<input id="clanrename" class="px-input" maxlength="16" value="${esc(c.name)}" ${lead ? '' : 'disabled'}></label>
+          <div class="clcolors">${COLORS.map(col => `<button class="clc ${col === c.color ? 'on' : ''}" data-col="${col}" style="--cc:${col}" ${lead ? '' : 'disabled'}></button>`).join('')}</div>
+          <label class="chk"><input type="checkbox" id="clanpvp" ${c.pvp ? 'checked' : ''} ${lead ? '' : 'disabled'}><i></i> PvP: клан сражается с другими игроками</label>
+          <label class="chk"><input type="checkbox" id="clanmark" ${c.markers ? 'checked' : ''} ${lead ? '' : 'disabled'}><i></i> Соклановцы видны на мини-карте и карте мира</label>
+          <p class="shint">Урона по своим нет никогда. Если PvP выключено, участники клана не ранят других игроков и сами неуязвимы для них.${G.pvp ? '' : ' <span class="warn">На этом сервере PvP выключено целиком.</span>'}</p>
+          <div class="mbtns row">${lead ? '<button class="px-btn small" id="clansave">Сохранить название</button>' : ''}<button class="px-btn small" id="clanleave">Покинуть клан</button>${lead ? '<button class="px-btn small red" id="clandisband">Распустить</button>' : ''}</div>
+        </div>
+      </div>`;
+    if (lead) {
+      box.querySelectorAll('.clc').forEach(b => b.onclick = () => { G.clanCmd('edit', { color: b.dataset.col }); TZ.audio.play('ui'); });
+      $('#clanpvp').onchange = (e) => G.clanCmd('edit', { pvp: e.target.checked });
+      $('#clanmark').onchange = (e) => G.clanCmd('edit', { markers: e.target.checked });
+      $('#clansave').onclick = () => { G.clanCmd('edit', { name: $('#clanrename').value }); TZ.audio.play('ui'); };
+      $('#clandisband').onclick = () => TZ.app.confirm(`Распустить клан «${c.name}»? Все участники выйдут из него.`, () => G.clanCmd('disband'));
+      box.querySelectorAll('[data-kick]').forEach(b => b.onclick = () => TZ.app.confirm(`Исключить ${c.names[b.dataset.kick] || 'игрока'} из клана?`, () => G.clanCmd('kick', { uid: b.dataset.kick })));
+      box.querySelectorAll('[data-lead]').forEach(b => b.onclick = () => TZ.app.confirm(`Передать главенство игроку ${c.names[b.dataset.lead] || ''}?`, () => G.clanCmd('lead', { uid: b.dataset.lead })));
+    }
+    $('#clanleave').onclick = () => TZ.app.confirm(`Покинуть клан «${c.name}»?`, () => G.clanCmd('leave'));
+  },
+  invited(G, d) {
+    TZ.audio.play('quest');
+    const t = $('#cfmtext');
+    TZ.app.confirm('', () => G.clanCmd('accept', { id: d.id }));
+    t.innerHTML = `<b>${esc(d.from)}</b> приглашает вас в клан<br><span class="clbadge" style="--cc:${d.color}">${esc(d.name)}</span>`;
+    $('#cfmyes').textContent = 'Вступить'; $('#cfmno').textContent = 'Отказаться';
+    const no = $('#cfmno'); const prev = no.onclick; no.onclick = () => { if (prev) prev(); G.clanCmd('decline'); $('#cfmno').textContent = 'Нет'; };
+  },
+};
+// tag helpers used by chat, name tags and the player list
+TZ.clanTag = (G, uid) => { const c = G && G.clanOf ? G.clanOf(uid) : null; return c ? { name: c.name, color: c.color } : null; };
 })();
 
 // =====================================================================
@@ -10015,6 +10237,7 @@ class HostNet {
     for (const c of this.clients.values()) list.push({ pid: c.pid, profile: c.profile, ping: c.ping });
     G.plist = list;
     this.broadcast('plist', list);
+    if (G.clanTouchNames) G.clanTouchNames(); this.broadcast('clans', G.clans || []);
   }
   elo(winPid, losePid) {
     const G = this.G, w = G.players.get(winPid), l = G.players.get(losePid); if (!w || !l) return;
@@ -10068,6 +10291,7 @@ class ClientNet {
       case 'obj': { const W = G.world; const c = W.chunkIf(Math.floor(d.x / TZ.CH), Math.floor(d.y / TZ.CH)); if (c) { const old = W.get(d.x, d.y); if (old) G.structures.delete(old); const o = d.o ? Object.assign({}, d.o) : null; c.obj[(d.y - c.y0) * TZ.CH + (d.x - c.x0)] = o; c.ver++; W.version++; if (o && TZ.BUILD[o.t]) G.structures.add(o); W.recordMod(d.x, d.y, o); } break; }
       case 'chunk': G.world.applyChunkMods(d.cx, d.cy, d.mods); G.world.applyRoofMods(d.cx, d.cy, d.roofs); break;
       case 'p': G.onPersonal(d.t, d.d); break;
+      case 'clans': G.clans = d || []; G.syncClans(); break;
       case 'plist': G.plist = d; for (const e of d) { const p = G.players.get(e.pid); if (p) { p.profile = e.profile; p.name = e.profile.name; } } break;
       case 'music': TZ.audio.setMusic(d.m); break;
       case 'victory': setTimeout(() => G.ui.showVictory(), 3500); G.won = true; break;
@@ -11096,7 +11320,7 @@ class Renderer {
     const tag = (x, y, z, label, col) => { const sx = (isoX(x, y) - cx) * S, sy = (isoY(x, y) - cy - z) * S; const w = g.measureText(label).width + 12; g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(sx - w / 2, sy - 10, w, 20); g.fillStyle = col; g.fillText(label, sx, sy); };
     const underRoof = (e) => G.world.roofAt(e.x, e.y) && !(this.roofHide && this.roofHide.has(Math.floor(e.x) * 131071 + Math.floor(e.y)));
     if (TZ.settings.showNames !== false) for (const a of G.allies) { if (a.dead || a.inCar || (this._hidden && this._hidden(a.x, a.y)) || underRoof(a)) continue; const d = dist(a.x, a.y, P.x, P.y); if (d > (a.owner ? 7 : 12)) continue; tag(a.x, a.y, 42, a.name + (a.owner && a.owner !== P.uid ? ' · чужой' : a.mode === 'guard' ? ' · охрана' : ''), a.owner === P.uid ? '#8fe0ff' : a.owner ? '#c0c0c0' : '#ffd24a'); }
-    if (TZ.settings.showNames !== false) for (const p of G.players.values()) { if (p === P || p.dead || (this._hidden && this._hidden(p.x, p.y)) || underRoof(p)) continue; const r = TZ.Account.rankOf((p.profile && p.profile.rn) || 1000); tag(p.x, p.y, p.vehicle ? 30 : 44, `${p.name} · ${TZ.Account.levelOf((p.profile && p.profile.rn) || 1000)}`, r.color); }
+    if (TZ.settings.showNames !== false) for (const p of G.players.values()) { if (p === P || p.dead || (this._hidden && this._hidden(p.x, p.y)) || underRoof(p)) continue; const r = TZ.Account.rankOf((p.profile && p.profile.rn) || 1000); const z0 = p.vehicle ? 30 : 44; tag(p.x, p.y, z0, `${p.name} · ${TZ.Account.levelOf((p.profile && p.profile.rn) || 1000)}`, r.color); const ct = G.clanOf && G.clanOf(p.uid); if (ct) { const mate = G.clanOf(P.uid) === ct; tag(p.x, p.y, z0 + 9, (mate ? '★ ' : '') + ct.name, ct.color); } }
     if (G.detSignal != null && P.weapon === 'detector' && !P.dead) {
       const sx = (isoX(P.x, P.y) - cx) * S, sy = (isoY(P.x, P.y) - cy - 52) * S, n = 10, on = Math.round(G.detSignal * n);
       g.fillStyle = 'rgba(0,0,0,.7)'; g.fillRect(sx - 44, sy - 9, 88, 18);
@@ -11190,7 +11414,13 @@ class Minimap {
     for (const z of G.zombies) if (!z.dead && dist2(z.x, z.y, P.x, P.y) < 2500 && !(G.hiddenAt && G.enclosures.size && G.hiddenAt(z.x, z.y))) dot(z.x, z.y, z.T.boss ? '#ff2020' : '#c03828', z.T.scale > 1.3 ? 2 : 1.2);
     for (const a of G.allies) if (!a.dead) dot(a.x, a.y, a.owner === P.uid ? '#5fd0ff' : a.owner ? '#a0a0a0' : '#ffd24a', 2);
     for (const v of G.vehicles) if (v.state !== 'wreck') dot(v.x, v.y, '#e8e0c0', 2.2);
-    for (const p of G.players.values()) if (p !== P) dot(p.x, p.y, '#ffffff', 2.6);
+    const myC = G.clanOf ? G.clanOf(P.uid) : null;
+    for (const p of G.players.values()) {
+      if (p === P || p.dead) continue;
+      const mate = myC && myC.markers && myC.members.includes(p.uid);
+      if (mate) { let dx = p.x - P.x, dy = p.y - P.y; const d = Math.hypot(dx, dy); if (d > 29) { dx *= 29 / d; dy *= 29 / d; } dot(P.x + dx, P.y + dy, '#000', 4.2); dot(P.x + dx, P.y + dy, myC.color, 3.2); }
+      else if (dist2(p.x, p.y, P.x, P.y) < 26 * 26) dot(p.x, p.y, '#ffffff', 2.6);
+    }
     for (const m of G.questMarkers()) dot(m.x, m.y, m.c, 2.4 + Math.sin(this.t * 6) * 0.6);
     if (G.dropAt) dot(G.dropAt.x, G.dropAt.y, (performance.now() / 250 | 0) % 2 ? '#ff4030' : '#ffffff', 3);
     g.restore();
@@ -11238,7 +11468,13 @@ TZ.BigMap = class {
     const seenP = new Set();
     for (const k of G.world.explored) { const [cx, cy] = k.split(',').map(Number); for (const p of G.world.poisNear(cx * CH, cy * CH, cx * CH + CH - 1, cy * CH + CH - 1)) { if (seenP.has(p.id) || p.type === 'roadjunk') continue; seenP.add(p.id); const [sx, sy] = toS(p.x + p.w / 2, p.y + p.h / 2); if (sx < 0 || sy < 0 || sx > Wd || sy > Hh) continue; const name = POI_NAMES[p.type] || ''; if (!name) continue; g.fillStyle = 'rgba(0,0,0,.6)'; const w = g.measureText(name).width + 8; g.fillRect(sx - w / 2, sy - 9, w, 18); g.fillStyle = '#ffe8a0'; g.fillText(name, sx, sy + 1); } }
     for (const o of G.structures) if ((o.t === 'bed' || o.t === 'sleepbag') && o.owner === P.uid) { const [sx, sy] = toS(o.x, o.y); g.fillStyle = '#7dff6a'; g.fillRect(sx - 4, sy - 4, 8, 8); }
-    for (const p of G.players.values()) { const [sx, sy] = toS(p.x, p.y); g.fillStyle = p === P ? '#7dff6a' : '#ffffff'; g.beginPath(); g.arc(sx, sy, p === P ? 6 : 5, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#000'; g.stroke(); if (p !== P) { g.fillStyle = '#fff'; g.fillText(p.name, sx, sy - 12); } }
+    const myC = G.clanOf ? G.clanOf(P.uid) : null;
+    for (const p of G.players.values()) {
+      const mate = p !== P && myC && myC.markers && myC.members.includes(p.uid);
+      if (p !== P && !mate) continue; // only clan members are shown on the world map
+      const [sx, sy] = toS(p.x, p.y); g.fillStyle = p === P ? '#7dff6a' : myC.color; g.beginPath(); g.arc(sx, sy, p === P ? 6 : 5, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 2; g.stroke();
+      if (p !== P) { const t = p.name + (p.dead ? ' (погиб)' : ''); const w = g.measureText(t).width + 8; g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(sx - w / 2, sy - 22, w, 16); g.fillStyle = myC.color; g.fillText(t, sx, sy - 13); }
+    }
     for (const v of G.vehicles) if (v.state !== 'wreck' && v.owner === P.uid) { const [sx, sy] = toS(v.x, v.y); g.fillStyle = '#e8e0c0'; g.fillRect(sx - 3, sy - 2, 6, 4); }
     for (const p of G.pings || []) { const [sx, sy] = toS(p.x, p.y); const b = Math.sin(performance.now() / 160) * 3; g.fillStyle = p.color; g.beginPath(); g.moveTo(sx - 9, sy - 18 + b); g.lineTo(sx + 9, sy - 18 + b); g.lineTo(sx, sy + b); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 2; g.stroke(); g.fillStyle = '#fff'; g.fillText(p.name, sx, sy - 24 + b); }
   }
@@ -12290,7 +12526,8 @@ class UI {
     const G = TZ.game;
     if (t[0] === '/') {
       const [cmd] = t.slice(1).split(' ');
-      if (cmd === 'help') this.chatMsg('', 'Команды: /help, /seed, /pos, /r текст (рация), /kick имя (только хост)', '#9ad0ff');
+      if (cmd === 'help') this.chatMsg('', 'Команды: /help, /seed, /pos, /c текст (клан), /r текст (рация), /kick имя (только хост)', '#9ad0ff');
+      else if (cmd === 'c') { const txt = t.slice(3).trim(); if (txt) G.clanCmd('chat', { text: txt }); }
       else if (cmd === 'r') { const txt = t.slice(3).trim(); if (!txt) return; if (!G.count('walkie')) { this.chatMsg('', 'Нужна рация (крафт на верстаке)', '#ff9a7a'); return; } G.act('chat', { text: txt, radio: 1 }); }
       else if (cmd === 'seed') this.chatMsg('', 'Зерно мира: ' + G.world.seed, '#9ad0ff');
       else if (cmd === 'pos') this.chatMsg('', `Координаты: ${Math.floor(G.me.x)}, ${Math.floor(G.me.y)}`, '#9ad0ff');
@@ -12300,8 +12537,8 @@ class UI {
     }
     G.act('chat', { text: t });
   }
-  chatMsg(name, text, color) {
-    const m = el('div', 'cmsg', name ? `<b style="color:${color || '#e8b030'}">${esc(name)}:</b> ${esc(text)}` : `<span style="color:${color || '#9ad0ff'}">${esc(text)}</span>`);
+  chatMsg(name, text, color, clan, clanColor) {
+    const m = el('div', 'cmsg', name ? `${clan ? `<b class="ctag" style="--cc:${clanColor || '#e8b030'}">${esc(clan)}</b> ` : ''}<b style="color:${color || '#e8b030'}">${esc(name)}:</b> ${esc(text)}` : `<span style="color:${color || '#9ad0ff'}">${esc(text)}</span>`);
     $('#chatlog').append(m); while ($('#chatlog').children.length > 12) $('#chatlog').firstChild.remove();
     if (name) TZ.audio.play('chat');
   }
@@ -12314,10 +12551,14 @@ class UI {
     for (const e of list) {
       const p = e.profile, r = TZ.Account.rankOf(p.rn);
       const row = el('div', 'prow', `<div class="pav-s"><img src="${TZ.Cosmetics.url(TZ.Cosmetics.avatar(p.avatar, p.look, 52))}"><img src="${TZ.Cosmetics.url(TZ.Cosmetics.frame(p.frame, 52))}"></div><div>${esc(p.name)}${e.host ? '<span class="host">ХОСТ</span>' : ''}${e.pid === G.me.pid ? '<span class="host">ВЫ</span>' : ''}${p.dev === 'phone' ? '<span class="host dev">ТЕЛЕФОН</span>' : '<span class="host dev">ПК</span>'}${TZ.Voice.isTalking(e.pid) || (e.pid === G.me.pid && TZ.Voice.talking) ? '<span class="vdot" title="говорит"></span>' : ''}</div><div style="color:${r.color}">${r.name}</div><div>Ур. ${TZ.Account.levelOf(p.rn)} · ${p.rn} RN</div><div class="ping">${e.pid === G.me.pid ? '' : (e.ping || 0) + ' мс'}</div>`);
+      const ct = TZ.clanTag(G, p.uid); if (ct) row.children[1].insertAdjacentHTML('afterbegin', `<span class="ctag" style="--cc:${ct.color}">${esc(ct.name)}</span> `);
+      const myc = G.clanOf(G.me.uid);
+      if (G.net && myc && e.pid !== G.me.pid && !ct) { const ib = el('button', 'px-btn small green clinv', 'В клан'); ib.onclick = (ev) => { ev.stopPropagation(); G.clanCmd('invite', { pid: e.pid }); ib.disabled = true; ib.textContent = 'Отправлено'; TZ.audio.play('ui'); }; row.append(ib); }
       row.onclick = () => this.showProfile(p);
       body.append(row);
     }
   }
+  onClans(G) { if ($('#clanp').classList.contains('show')) TZ.ClanUI.render(G); if ($('#plist').classList.contains('show')) this.renderPlist(G); }
   showProfile(p) { $('#pviewbody').innerHTML = TZ.Cosmetics.card(p); $('#pview').classList.add('show'); TZ.audio.play('ui_open'); }
   // ---------------- big map ----------------
   bindMap() {
@@ -12816,7 +13057,7 @@ App.toMenu = () => {
 function setPause(p) {
   const G = App.game; if (!G) return;
   G.paused = p; $('#pause').classList.toggle('hidden', !p);
-  if (p) { $('#pausedaily').innerHTML = '<div class="phead small">Задания дня</div>' + TZ.Daily.html(); App.ui.closeInventory(); $('#btnSave').classList.toggle('hidden', G.role === 'client'); $('#btnInvite').classList.toggle('hidden', G.role !== 'host'); $('#pausenet').textContent = G.net ? (G.role === 'host' ? `Сервер: ${G.serverName} · игроков ${G.players.size}` : `Вы на сервере «${G.serverName}». Игра не останавливается.`) : ''; }
+  if (p) { $('#pausedaily').innerHTML = '<div class="phead small">Задания дня</div>' + TZ.Daily.html(); App.ui.closeInventory(); $('#btnSave').classList.toggle('hidden', G.role === 'client'); $('#btnInvite').classList.toggle('hidden', G.role !== 'host'); $('#btnClan').classList.toggle('hidden', !G.net); $('#pausenet').textContent = G.net ? (G.role === 'host' ? `Сервер: ${G.serverName} · игроков ${G.players.size}` : `Вы на сервере «${G.serverName}». Игра не останавливается.`) : ''; }
 }
 // ---------------------------------------------------------------- invite (links + QR for phones)
 App.invite = () => {
@@ -12857,7 +13098,7 @@ App.phrases = () => {
   $('#phrases').classList.add('show'); TZ.audio.play('ui_open');
 };
 // ---------------------------------------------------------------- dialogs
-App.confirm = (text, yes) => { $('#cfmtext').textContent = text; $('#cfmyes').textContent = 'Да'; $('#cfmno').classList.remove('hidden'); $('#confirm').classList.add('show'); $('#cfmyes').onclick = () => { $('#confirm').classList.remove('show'); yes && yes(); }; $('#cfmno').onclick = () => $('#confirm').classList.remove('show'); };
+App.confirm = (text, yes) => { $('#cfmtext').textContent = text; $('#cfmyes').textContent = 'Да'; $('#cfmno').textContent = 'Нет'; $('#cfmno').classList.remove('hidden'); $('#confirm').classList.add('show'); $('#cfmyes').onclick = () => { $('#confirm').classList.remove('show'); yes && yes(); }; $('#cfmno').onclick = () => $('#confirm').classList.remove('show'); };
 App.alert = (text, ok) => { $('#cfmtext').textContent = text; $('#cfmyes').textContent = 'OK'; $('#cfmno').classList.add('hidden'); $('#confirm').classList.add('show'); $('#cfmyes').onclick = () => { $('#confirm').classList.remove('show'); ok && ok(); }; };
 App.prompt = (text, val, done) => { $('#cfmtext').innerHTML = `${TZ.esc(text)}<input id="cfmin" class="px-input" maxlength="28" value="${TZ.esc(val || '')}" style="margin-top:10px">`; $('#cfmyes').textContent = 'OK'; $('#cfmno').classList.remove('hidden'); $('#confirm').classList.add('show'); setTimeout(() => $('#cfmin').focus(), 30); $('#cfmyes').onclick = () => { const v = $('#cfmin').value; $('#confirm').classList.remove('show'); done(v); }; $('#cfmno').onclick = () => $('#confirm').classList.remove('show'); };
 
@@ -12878,6 +13119,7 @@ function bindUI() {
   click('#btnResume', () => setPause(false));
   click('#btnSave', () => { const G = App.game; if (!G) return; if (G.save()) { $('#btnSave').textContent = 'Сохранено ✓'; setTimeout(() => $('#btnSave').textContent = 'Сохранить мир', 1500); } });
   click('#btnInvite', () => App.invite());
+  click('#btnClan', () => { setPause(false); TZ.ClanUI.open(); }); click('#btnClan2', () => { $('#plist').classList.remove('show'); TZ.ClanUI.open(); });
   click('#btnMenu', () => App.confirm('Выйти в главное меню? Мир будет сохранён.', () => App.toMenu()));
   click('#deathrespawn', () => { $('#death').classList.remove('show'); App.game.respawn(); });
   click('#deathload', () => { const G = App.game; const m = TZ.Saves.meta(G.worldId); App.game = null; if (m) App.startSolo(m); });
@@ -12965,7 +13207,7 @@ function globalKeys() {
   if (I.hit('F11')) toggleFull();
   if (App.state !== 'game' || !G) return;
   if (ui.chatOpen) return;
-  const top = ['settings', 'help', 'confirm', 'pview', 'keypad', 'bigmap', 'plist', 'phrases', 'invite'].find(id => $('#' + id).classList.contains('show'));
+  const top = ['settings', 'help', 'confirm', 'pview', 'keypad', 'bigmap', 'clanp', 'plist', 'phrases', 'invite'].find(id => $('#' + id).classList.contains('show'));
   if (I.hit('Escape')) {
     if (top) { $('#' + top).classList.remove('show'); return; }
     if ($('#craft').classList.contains('show')) { ui.closeCraft(); return; }
@@ -12978,6 +13220,7 @@ function globalKeys() {
   }
   if (top === 'keypad' || top === 'confirm' || top === 'pview' || top === 'settings') return;
   if (I.act('players')) { ui.togglePlist(); return; }
+  if (I.act('clan') && G.net) { TZ.ClanUI.toggle(); return; }
   if (G.paused && !$('#craft').classList.contains('show')) return;
   if (G.mode === 'dead') return;
   if (I.act('chat')) { ui.openChat(); return; }

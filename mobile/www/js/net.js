@@ -155,6 +155,7 @@ class HostNet {
     for (const c of this.clients.values()) list.push({ pid: c.pid, profile: c.profile, ping: c.ping });
     G.plist = list;
     this.broadcast('plist', list);
+    if (G.clanTouchNames) G.clanTouchNames(); this.broadcast('clans', G.clans || []);
   }
   elo(winPid, losePid) {
     const G = this.G, w = G.players.get(winPid), l = G.players.get(losePid); if (!w || !l) return;
@@ -208,6 +209,7 @@ class ClientNet {
       case 'obj': { const W = G.world; const c = W.chunkIf(Math.floor(d.x / TZ.CH), Math.floor(d.y / TZ.CH)); if (c) { const old = W.get(d.x, d.y); if (old) G.structures.delete(old); const o = d.o ? Object.assign({}, d.o) : null; c.obj[(d.y - c.y0) * TZ.CH + (d.x - c.x0)] = o; c.ver++; W.version++; if (o && TZ.BUILD[o.t]) G.structures.add(o); W.recordMod(d.x, d.y, o); } break; }
       case 'chunk': G.world.applyChunkMods(d.cx, d.cy, d.mods); G.world.applyRoofMods(d.cx, d.cy, d.roofs); break;
       case 'p': G.onPersonal(d.t, d.d); break;
+      case 'clans': G.clans = d || []; G.syncClans(); break;
       case 'plist': G.plist = d; for (const e of d) { const p = G.players.get(e.pid); if (p) { p.profile = e.profile; p.name = e.profile.name; } } break;
       case 'music': TZ.audio.setMusic(d.m); break;
       case 'victory': setTimeout(() => G.ui.showVictory(), 3500); G.won = true; break;

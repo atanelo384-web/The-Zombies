@@ -24,7 +24,7 @@ class Game {
     this.camera = { x: 0, y: 0, sx: 0, sy: 0, amt: 0, zoom: 0, shake(n) { if (TZ.settings.shake) this.amt = Math.max(this.amt, n); } };
     this.zgrid = new TZ.Grid(1, 2); this._tmpA = []; this._tmpB = []; this._tmpC = [];
     this.mouseWorld = { x: 0, y: 0 }; this.mode = 'play'; this.paused = false; this.uiBlocking = false; this.canControl = true; this.typing = false;
-    this.players = new Map(); this.zombies = []; this.allies = []; this.animals = []; this.vehicles = []; this.pickups = []; this.structures = new Set();
+    this.clans = []; this.players = new Map(); this.zombies = []; this.allies = []; this.animals = []; this.vehicles = []; this.pickups = []; this.structures = new Set();
     this.evq = []; this._nid = 1;
     this.flows = new Map(); this.flowT = 0; this.dirtyFlow = true; this.directorT = 2; this.questT = 0; this.saveT = 60;
     this.horde = null; this.evacDay = 0; this.heli = null; this.won = false; this.endless = false;
@@ -138,6 +138,7 @@ class Game {
   hurtPlayer(p, n, o = {}) {
     if (!p || p.dead || p.vehicle) return;
     if (o.by && p.pid === o.by) return;
+    if (o.by && this.clanBlocksDamage && this.clanBlocksDamage(o.by, p)) return; // clans: no friendly fire, peaceful clans
     this.toPlayer(p.pid, 'hurt', { n, bleed: o.bleed, inf: o.inf, chill: o.chill, dry: o.dry, push: o.push, acid: o.acid, silent: o.silent, by: o.by });
   }
   healEntity(t, n) { if (t.kind === 'player') this.toPlayer(t.pid, 'heal', { n }); else t.hp = Math.min(t.maxHp, t.hp + n); this.ev('text', t.x, t.y, '+' + n, '#7dff8a'); }
@@ -149,6 +150,8 @@ class Game {
     const P = this.me;
     switch (type) {
       case 'vsig': TZ.Voice.onSignal(d.from, d.data); break;
+      case 'clanInvite': TZ.ClanUI.invited(this, d); break;
+      case 'clanChat': this.ui.chatMsg('[клан] ' + d.name, d.text, d.color); break;
       case 'radioChat': if (this.count('walkie') || d.name === P.name) { this.ui.chatMsg('[рация] ' + d.name, d.text, '#e8b030'); TZ.audio.play('radio_on', 0.5); } break;
       case 'vstate': TZ.Voice.onState(d.from, d); break;
       case 'give': this.receive(d.items, d.x, d.y); break;
@@ -207,7 +210,7 @@ class Game {
       case 'molotov': fx.decal(a, b, TZ.art.scorch, 120); fx.sparks(a, b, 12, '#ffb040', 4); if (!this.auth) this.combat.fires.push({ x: a, y: b, r: 1.9, life: 7, max: 7 }); break;
       case 'shot': if (!this.auth && e[5] !== this.me.pid) this.combat.remoteShot(a, b, c, d); break;
       case 'zdie': TZ.audio.zdie(b, this.audioVol(c, d)); fx.blood(c, d, 12, 1.2); fx.decal(c, d, TZ.art.blood[(Math.random() * 6) | 0], 200); break;
-      case 'chat': this.ui.chatMsg(a, b, c); break;
+      case 'chat': this.ui.chatMsg(a, b, c, d, f); break;
       case 'sys': this.msg(a, b); break;
       case 'banner': this.ui.banner(a, b); break;
       case 'heli': TZ.audio.play('heli'); break;
@@ -269,7 +272,8 @@ class Game {
       case 'craftVeh': { const r = TZ.VEHICLE_RECIPES.find(r => r.out === d.vk); if (!r) return;
         if (TZ.VEHICLES[d.vk].water) { const v = new TZ.Vehicle(this, d.vk, p.x, p.y, 0, 'new'); let ok = false; for (let rr = 1; rr < 11 && !ok; rr++) for (let k = 0; k < 24 && !ok; k++) { const a = k / 24 * 6.28, x = p.x + Math.cos(a) * rr, y = p.y + Math.sin(a) * rr; if (!v.blocked(W, x, y, a)) { v.x = x; v.y = y; v.a = a; ok = true; } } if (!ok) { this.giveTo(pid, r.cost); this.hintTo(pid, 'Лодку можно собрать только у воды (до 10 клеток)'); return; } v.owner = p.uid; this.vehicles.push(v); this.ev('banner', 'ЛОДКА ГОТОВА', r.name); break; }
         const pos = this.findFree(d.x, d.y, 4, 'veh'); if (!pos) { this.giveTo(pid, r.cost); this.hintTo(pid, 'Нет места для машины'); return; } const v = new TZ.Vehicle(this, d.vk, pos.x, pos.y, 0, 'new'); v.owner = p.uid; this.vehicles.push(v); this.ev('banner', 'МАШИНА СОБРАНА', r.name); break; }
-      case 'chat': { const txt = String(d.text || '').slice(0, 160); if (!txt) return; const color = TZ.Account.rankOf((p.profile && p.profile.rn) || 1000).color; if (d.radio) { for (const q of this.players.values()) this.toPlayer(q.pid, 'radioChat', { name: p.name, text: txt }); break; } this.ev('chat', p.name, txt, color); break; }
+      case 'clan': this.clanAct(pid, d); break;
+      case 'chat': { const txt = String(d.text || '').slice(0, 160); if (!txt) return; const color = TZ.Account.rankOf((p.profile && p.profile.rn) || 1000).color; if (d.radio) { for (const q of this.players.values()) this.toPlayer(q.pid, 'radioChat', { name: p.name, text: txt }); break; } const cl = this.clanOf(p.uid); this.ev('chat', p.name, txt, color, cl ? cl.name : 0, cl ? cl.color : 0); break; }
       case 'pvpDeath': { const killer = this.players.get(d.by); if (killer) { this.toPlayer(d.by, 'stat', { k: 'pvpKills', n: 1 }); this.ev('sys', `${killer.name} убил ${p.name}`, 'bad'); if (this.net) this.net.elo(d.by, pid); } break; }
       case 'respawned': break;
       case 'fish': {
@@ -1228,7 +1232,7 @@ class Game {
       allies: this.allies.filter(a => !a.dead).map(a => a.serialize()),
       vehicles: this.vehicles.map(v => v.serialize()),
       dogs: this.animals.filter(a => a.owner && !a.dead).map(a => ({ x: +a.x.toFixed(2), y: +a.y.toFixed(2), owner: a.owner, mode: a.mode, hp: Math.round(a.hp) })),
-      quest: this.quest, stats: this.stats, evacDay: this.evacDay, endless: this.endless, nid: this._nid,
+      clans: this.clans || [], quest: this.quest, stats: this.stats, evacDay: this.evacDay, endless: this.endless, nid: this._nid,
     };
   }
   save(auto, quiet) {
@@ -1244,6 +1248,7 @@ class Game {
     this.minutes = d.minutes; this.day = d.day; this.quest = d.quest || this.quest; this.stats = Object.assign(this.stats, d.stats || {}); this.evacDay = d.evacDay || 0; this.endless = !!d.endless; this._nid = d.nid || 1;
     this.spawnPoint = d.spawn || { x: 70.5, y: 74.5 };
     this.playerData = d.playerData || {};
+    this.clans = (d.clans || []).filter(c => c && c.members && c.members.length);
     const pd = this.playerData[this.me.uid];
     if (pd) { this.me.load(pd); this.me.look = TZ.Account.active().look || this.me.look; } else { this.me.x = this.spawnPoint.x; this.me.y = this.spawnPoint.y; }
     // pre-generate around the player so saved entities have ground

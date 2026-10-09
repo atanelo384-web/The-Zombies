@@ -1,6 +1,6 @@
 {
   "name": "the-zombies-mobile",
-  "version": "4.1.0",
+  "version": "4.2.0",
   "private": true,
   "description": "The Zombies — Android и iPhone (Capacitor). Игра берётся из корневой папки проекта.",
   "scripts": {

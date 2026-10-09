@@ -666,3 +666,29 @@ body.mobile .mfoot { left: auto; right: 14px; width: auto; }
 #buildbar { background: linear-gradient(rgba(16,18,13,.9), rgba(8,9,6,.94)); }
 
 #touch .airb { display: none !important; } #touch.air .airb { display: flex !important; } #touch.air .gnd { display: none !important; }
+
+/* ---- 4.2 clans ---- */
+.ctag, .clbadge { display: inline-block; padding: 0 6px; color: #fff; background: color-mix(in srgb, var(--cc) 70%, #000); border: 1px solid #050605; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), inset 3px 0 0 var(--cc); text-shadow: 1px 1px 0 #000; font-weight: normal; }
+.ctag { font-size: 14px; line-height: 1.3; }
+.clbadge { font-size: 22px; padding: 2px 12px; }
+.prow { grid-template-columns: 56px 1fr 120px 110px 70px auto; }
+.prow .clinv { white-space: nowrap; }
+.phead-r { display: flex; gap: 8px; align-items: center; }
+.clanbox { width: 860px; min-height: 420px; }
+#clanbody { padding: 4px 8px 8px; }
+.clhead { display: flex; align-items: center; gap: 14px; padding: 8px 10px; margin-bottom: 8px; background: linear-gradient(90deg, color-mix(in srgb, var(--cc) 25%, transparent), transparent); box-shadow: inset 4px 0 0 var(--cc); }
+.clcols { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.clmembers { max-height: 300px; display: flex; flex-direction: column; gap: 3px; }
+.clmem { display: flex; align-items: center; gap: 8px; padding: 4px 8px; background: rgba(255,255,255,.03); border-left: 3px solid #2e3226; font-size: 17px; }
+.clmem .cldot { width: 9px; height: 9px; background: #555; box-shadow: 0 0 0 1px #000; }
+.clmem.on .cldot { background: #58c068; box-shadow: 0 0 6px #58c068; }
+.clmem .clmn { flex: 1; } .clmem .clst { color: var(--dim); font-size: 13px; }
+.clmem .host { color: var(--hi); font-size: 13px; }
+.clmem .px-btn.small { font-size: 13px; padding: 0 6px; }
+.clcolors { display: flex; gap: 6px; flex-wrap: wrap; margin: 4px 0 8px; }
+.clc { width: 32px; height: 32px; background: var(--cc); border: 2px solid #050605; box-shadow: inset 0 2px 0 rgba(255,255,255,.35), inset 0 -3px 0 rgba(0,0,0,.3); }
+.clc.on { outline: 3px solid #fff; outline-offset: 1px; }
+.clc:disabled { opacity: .5; }
+.cl-row { display: flex; flex-direction: column; gap: 4px; font-size: 16px; color: var(--dim); margin-bottom: 6px; }
+.clannew { max-width: 520px; margin: 0 auto; }
+@media (max-width: 1000px) { .clcols { grid-template-columns: 1fr; } }

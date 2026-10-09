@@ -1,6 +1,3 @@
 node_modules/
-mobile/node_modules/
 release/
-mobile/android/.gradle/
-mobile/android/app/build/
-mobile/apk-lite/keys/
+dist/

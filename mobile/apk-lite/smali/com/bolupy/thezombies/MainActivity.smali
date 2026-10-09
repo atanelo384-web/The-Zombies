@@ -47,7 +47,7 @@
     invoke-virtual {v1, v3}, Landroid/webkit/WebSettings;->setMixedContentMode(I)V
     invoke-virtual {v1}, Landroid/webkit/WebSettings;->getUserAgentString()Ljava/lang/String;
     move-result-object v3
-    const-string v4, " TheZombiesApp/4.1"
+    const-string v4, " TheZombiesApp/4.2"
     invoke-virtual {v3, v4}, Ljava/lang/String;->concat(Ljava/lang/String;)Ljava/lang/String;
     move-result-object v3
     invoke-virtual {v1, v3}, Landroid/webkit/WebSettings;->setUserAgentString(Ljava/lang/String;)V

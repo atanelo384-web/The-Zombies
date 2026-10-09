@@ -390,7 +390,8 @@ class UI {
     const G = TZ.game;
     if (t[0] === '/') {
       const [cmd] = t.slice(1).split(' ');
-      if (cmd === 'help') this.chatMsg('', 'Команды: /help, /seed, /pos, /r текст (рация), /kick имя (только хост)', '#9ad0ff');
+      if (cmd === 'help') this.chatMsg('', 'Команды: /help, /seed, /pos, /c текст (клан), /r текст (рация), /kick имя (только хост)', '#9ad0ff');
+      else if (cmd === 'c') { const txt = t.slice(3).trim(); if (txt) G.clanCmd('chat', { text: txt }); }
       else if (cmd === 'r') { const txt = t.slice(3).trim(); if (!txt) return; if (!G.count('walkie')) { this.chatMsg('', 'Нужна рация (крафт на верстаке)', '#ff9a7a'); return; } G.act('chat', { text: txt, radio: 1 }); }
       else if (cmd === 'seed') this.chatMsg('', 'Зерно мира: ' + G.world.seed, '#9ad0ff');
       else if (cmd === 'pos') this.chatMsg('', `Координаты: ${Math.floor(G.me.x)}, ${Math.floor(G.me.y)}`, '#9ad0ff');
@@ -400,8 +401,8 @@ class UI {
     }
     G.act('chat', { text: t });
   }
-  chatMsg(name, text, color) {
-    const m = el('div', 'cmsg', name ? `<b style="color:${color || '#e8b030'}">${esc(name)}:</b> ${esc(text)}` : `<span style="color:${color || '#9ad0ff'}">${esc(text)}</span>`);
+  chatMsg(name, text, color, clan, clanColor) {
+    const m = el('div', 'cmsg', name ? `${clan ? `<b class="ctag" style="--cc:${clanColor || '#e8b030'}">${esc(clan)}</b> ` : ''}<b style="color:${color || '#e8b030'}">${esc(name)}:</b> ${esc(text)}` : `<span style="color:${color || '#9ad0ff'}">${esc(text)}</span>`);
     $('#chatlog').append(m); while ($('#chatlog').children.length > 12) $('#chatlog').firstChild.remove();
     if (name) TZ.audio.play('chat');
   }
@@ -414,10 +415,14 @@ class UI {
     for (const e of list) {
       const p = e.profile, r = TZ.Account.rankOf(p.rn);
       const row = el('div', 'prow', `<div class="pav-s"><img src="${TZ.Cosmetics.url(TZ.Cosmetics.avatar(p.avatar, p.look, 52))}"><img src="${TZ.Cosmetics.url(TZ.Cosmetics.frame(p.frame, 52))}"></div><div>${esc(p.name)}${e.host ? '<span class="host">ХОСТ</span>' : ''}${e.pid === G.me.pid ? '<span class="host">ВЫ</span>' : ''}${p.dev === 'phone' ? '<span class="host dev">ТЕЛЕФОН</span>' : '<span class="host dev">ПК</span>'}${TZ.Voice.isTalking(e.pid) || (e.pid === G.me.pid && TZ.Voice.talking) ? '<span class="vdot" title="говорит"></span>' : ''}</div><div style="color:${r.color}">${r.name}</div><div>Ур. ${TZ.Account.levelOf(p.rn)} · ${p.rn} RN</div><div class="ping">${e.pid === G.me.pid ? '' : (e.ping || 0) + ' мс'}</div>`);
+      const ct = TZ.clanTag(G, p.uid); if (ct) row.children[1].insertAdjacentHTML('afterbegin', `<span class="ctag" style="--cc:${ct.color}">${esc(ct.name)}</span> `);
+      const myc = G.clanOf(G.me.uid);
+      if (G.net && myc && e.pid !== G.me.pid && !ct) { const ib = el('button', 'px-btn small green clinv', 'В клан'); ib.onclick = (ev) => { ev.stopPropagation(); G.clanCmd('invite', { pid: e.pid }); ib.disabled = true; ib.textContent = 'Отправлено'; TZ.audio.play('ui'); }; row.append(ib); }
       row.onclick = () => this.showProfile(p);
       body.append(row);
     }
   }
+  onClans(G) { if ($('#clanp').classList.contains('show')) TZ.ClanUI.render(G); if ($('#plist').classList.contains('show')) this.renderPlist(G); }
   showProfile(p) { $('#pviewbody').innerHTML = TZ.Cosmetics.card(p); $('#pview').classList.add('show'); TZ.audio.play('ui_open'); }
   // ---------------- big map ----------------
   bindMap() {

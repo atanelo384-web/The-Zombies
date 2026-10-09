@@ -14,7 +14,7 @@ HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.abspath(os.pat
 T = os.environ.get('TOOLS', '/tmp/apkt')
 AAPT2 = os.path.join(T, 'aaptjs3/package/bin/x64/linux/aapt2'); AJAR = os.path.join(T, 'ap/android-33/android.jar')
 SMALI_CP = os.path.join(T, '_specs-feup_alpakka/package/java-binaries/*'); SIGNER = os.path.join(T, 'signer')
-VER = os.environ.get('VER', '4.1.0'); VCODE = os.environ.get('VCODE', '41')
+VER = os.environ.get('VER', '4.2.0'); VCODE = os.environ.get('VCODE', '42')
 OUT = os.path.join(ROOT, 'dist', 'TheZombies.apk')
 def run(*a, **k): print('$', ' '.join(a)); subprocess.run(a, check=True, **k)
 w = tempfile.mkdtemp(prefix='tzapk')

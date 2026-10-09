@@ -624,7 +624,7 @@ class Renderer {
     const tag = (x, y, z, label, col) => { const sx = (isoX(x, y) - cx) * S, sy = (isoY(x, y) - cy - z) * S; const w = g.measureText(label).width + 12; g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(sx - w / 2, sy - 10, w, 20); g.fillStyle = col; g.fillText(label, sx, sy); };
     const underRoof = (e) => G.world.roofAt(e.x, e.y) && !(this.roofHide && this.roofHide.has(Math.floor(e.x) * 131071 + Math.floor(e.y)));
     if (TZ.settings.showNames !== false) for (const a of G.allies) { if (a.dead || a.inCar || (this._hidden && this._hidden(a.x, a.y)) || underRoof(a)) continue; const d = dist(a.x, a.y, P.x, P.y); if (d > (a.owner ? 7 : 12)) continue; tag(a.x, a.y, 42, a.name + (a.owner && a.owner !== P.uid ? ' · чужой' : a.mode === 'guard' ? ' · охрана' : ''), a.owner === P.uid ? '#8fe0ff' : a.owner ? '#c0c0c0' : '#ffd24a'); }
-    if (TZ.settings.showNames !== false) for (const p of G.players.values()) { if (p === P || p.dead || (this._hidden && this._hidden(p.x, p.y)) || underRoof(p)) continue; const r = TZ.Account.rankOf((p.profile && p.profile.rn) || 1000); tag(p.x, p.y, p.vehicle ? 30 : 44, `${p.name} · ${TZ.Account.levelOf((p.profile && p.profile.rn) || 1000)}`, r.color); }
+    if (TZ.settings.showNames !== false) for (const p of G.players.values()) { if (p === P || p.dead || (this._hidden && this._hidden(p.x, p.y)) || underRoof(p)) continue; const r = TZ.Account.rankOf((p.profile && p.profile.rn) || 1000); const z0 = p.vehicle ? 30 : 44; tag(p.x, p.y, z0, `${p.name} · ${TZ.Account.levelOf((p.profile && p.profile.rn) || 1000)}`, r.color); const ct = G.clanOf && G.clanOf(p.uid); if (ct) { const mate = G.clanOf(P.uid) === ct; tag(p.x, p.y, z0 + 9, (mate ? '★ ' : '') + ct.name, ct.color); } }
     if (G.detSignal != null && P.weapon === 'detector' && !P.dead) {
       const sx = (isoX(P.x, P.y) - cx) * S, sy = (isoY(P.x, P.y) - cy - 52) * S, n = 10, on = Math.round(G.detSignal * n);
       g.fillStyle = 'rgba(0,0,0,.7)'; g.fillRect(sx - 44, sy - 9, 88, 18);
@@ -718,7 +718,13 @@ class Minimap {
     for (const z of G.zombies) if (!z.dead && dist2(z.x, z.y, P.x, P.y) < 2500 && !(G.hiddenAt && G.enclosures.size && G.hiddenAt(z.x, z.y))) dot(z.x, z.y, z.T.boss ? '#ff2020' : '#c03828', z.T.scale > 1.3 ? 2 : 1.2);
     for (const a of G.allies) if (!a.dead) dot(a.x, a.y, a.owner === P.uid ? '#5fd0ff' : a.owner ? '#a0a0a0' : '#ffd24a', 2);
     for (const v of G.vehicles) if (v.state !== 'wreck') dot(v.x, v.y, '#e8e0c0', 2.2);
-    for (const p of G.players.values()) if (p !== P) dot(p.x, p.y, '#ffffff', 2.6);
+    const myC = G.clanOf ? G.clanOf(P.uid) : null;
+    for (const p of G.players.values()) {
+      if (p === P || p.dead) continue;
+      const mate = myC && myC.markers && myC.members.includes(p.uid);
+      if (mate) { let dx = p.x - P.x, dy = p.y - P.y; const d = Math.hypot(dx, dy); if (d > 29) { dx *= 29 / d; dy *= 29 / d; } dot(P.x + dx, P.y + dy, '#000', 4.2); dot(P.x + dx, P.y + dy, myC.color, 3.2); }
+      else if (dist2(p.x, p.y, P.x, P.y) < 26 * 26) dot(p.x, p.y, '#ffffff', 2.6);
+    }
     for (const m of G.questMarkers()) dot(m.x, m.y, m.c, 2.4 + Math.sin(this.t * 6) * 0.6);
     if (G.dropAt) dot(G.dropAt.x, G.dropAt.y, (performance.now() / 250 | 0) % 2 ? '#ff4030' : '#ffffff', 3);
     g.restore();
@@ -766,7 +772,13 @@ TZ.BigMap = class {
     const seenP = new Set();
     for (const k of G.world.explored) { const [cx, cy] = k.split(',').map(Number); for (const p of G.world.poisNear(cx * CH, cy * CH, cx * CH + CH - 1, cy * CH + CH - 1)) { if (seenP.has(p.id) || p.type === 'roadjunk') continue; seenP.add(p.id); const [sx, sy] = toS(p.x + p.w / 2, p.y + p.h / 2); if (sx < 0 || sy < 0 || sx > Wd || sy > Hh) continue; const name = POI_NAMES[p.type] || ''; if (!name) continue; g.fillStyle = 'rgba(0,0,0,.6)'; const w = g.measureText(name).width + 8; g.fillRect(sx - w / 2, sy - 9, w, 18); g.fillStyle = '#ffe8a0'; g.fillText(name, sx, sy + 1); } }
     for (const o of G.structures) if ((o.t === 'bed' || o.t === 'sleepbag') && o.owner === P.uid) { const [sx, sy] = toS(o.x, o.y); g.fillStyle = '#7dff6a'; g.fillRect(sx - 4, sy - 4, 8, 8); }
-    for (const p of G.players.values()) { const [sx, sy] = toS(p.x, p.y); g.fillStyle = p === P ? '#7dff6a' : '#ffffff'; g.beginPath(); g.arc(sx, sy, p === P ? 6 : 5, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#000'; g.stroke(); if (p !== P) { g.fillStyle = '#fff'; g.fillText(p.name, sx, sy - 12); } }
+    const myC = G.clanOf ? G.clanOf(P.uid) : null;
+    for (const p of G.players.values()) {
+      const mate = p !== P && myC && myC.markers && myC.members.includes(p.uid);
+      if (p !== P && !mate) continue; // only clan members are shown on the world map
+      const [sx, sy] = toS(p.x, p.y); g.fillStyle = p === P ? '#7dff6a' : myC.color; g.beginPath(); g.arc(sx, sy, p === P ? 6 : 5, 0, Math.PI * 2); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 2; g.stroke();
+      if (p !== P) { const t = p.name + (p.dead ? ' (погиб)' : ''); const w = g.measureText(t).width + 8; g.fillStyle = 'rgba(0,0,0,.65)'; g.fillRect(sx - w / 2, sy - 22, w, 16); g.fillStyle = myC.color; g.fillText(t, sx, sy - 13); }
+    }
     for (const v of G.vehicles) if (v.state !== 'wreck' && v.owner === P.uid) { const [sx, sy] = toS(v.x, v.y); g.fillStyle = '#e8e0c0'; g.fillRect(sx - 3, sy - 2, 6, 4); }
     for (const p of G.pings || []) { const [sx, sy] = toS(p.x, p.y); const b = Math.sin(performance.now() / 160) * 3; g.fillStyle = p.color; g.beginPath(); g.moveTo(sx - 9, sy - 18 + b); g.lineTo(sx + 9, sy - 18 + b); g.lineTo(sx, sy + b); g.fill(); g.strokeStyle = '#000'; g.lineWidth = 2; g.stroke(); g.fillStyle = '#fff'; g.fillText(p.name, sx, sy - 24 + b); }
   }

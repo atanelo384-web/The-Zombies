@@ -88,9 +88,13 @@
   </div></div>
 
   <div id="plist" class="modal light"><div class="mbox px-panel wide">
-    <div class="phead"><span id="plisttitle">Игроки на сервере</span> <button class="px-x" data-close="plist"></button></div>
+    <div class="phead"><span id="plisttitle">Игроки на сервере</span> <span class="phead-r"><button class="px-btn small" id="btnClan2">Клан</button><button class="px-x" data-close="plist"></button></span></div>
     <div id="plistbody" class="scroll"></div>
     <div class="phint">Нажмите на игрока, чтобы открыть его профиль. Закрыть — F3.</div>
+  </div></div>
+  <div id="clanp" class="modal light"><div class="mbox px-panel wide clanbox">
+    <div class="phead">Клан <button class="px-x" data-close="clanp"></button></div>
+    <div id="clanbody" class="scroll"></div>
   </div></div>
   <div id="bigmap" class="modal"><div class="mbox px-panel mapbox">
     <div class="phead">Карта мира <span class="sub inline" id="mapcoords"></span><button class="px-x" data-close="bigmap"></button></div>
@@ -104,6 +108,7 @@
       <button class="px-btn big" id="btnResume">Продолжить</button>
       <button class="px-btn big" id="btnSave">Сохранить мир</button>
       <button class="px-btn big" id="btnInvite">Пригласить друзей</button>
+      <button class="px-btn big" id="btnClan">Клан</button>
       <button class="px-btn big" id="btnSettings2">Настройки</button>
       <button class="px-btn big" id="btnHelp2">Как играть</button>
       <button class="px-btn big ghost" id="btnMenu">Выйти в меню</button>
@@ -151,8 +156,9 @@
     <div id="acccard" class="px-panel" title="Открыть профиль"></div>
     <div class="px-panel dailyp"><div class="phead small">Задания дня <span class="sub inline">обновляются каждый день</span></div><div id="dailylist"></div></div>
     <div class="px-panel news">
-      <div class="phead small"><span>Обновление <span class="gold">4.1</span> · 4.0</span></div>
+      <div class="phead small"><span>Обновление <span class="gold">4.2</span> · 4.1 · 4.0</span></div>
       <ul class="scroll">
+        <li><b>Кланы</b> в мультиплеере: название, цвет, PvP, приглашения, клановый чат /c и соклановцы на карте</li>
         <li><b>Вертолёты и самолёты</b>: Ми-2 и Ан-2 на аэродромах и военных базах (редко) или свой из труб</li>
         <li><b>Лодки и катера</b>: лодку собирают у воды, катер можно только найти у озёр</li>
         <li><b>Дома и крыши</b>: кирпичные стены, двери с кодом и без. Снаружи крыша скрывает дом, внутри исчезает</li>
@@ -324,6 +330,8 @@
       <p><b>Металлоискатель</b> в руках пищит у закопанного тайника — копайте <b>лопатой</b>. <b>Лук</b> и <b>копьё</b> делаются руками, <b>гвоздемёт</b>, <b>гранатомёт</b> и <b>рация</b> — на верстаке. <b>Факел</b> светит и поджигает.</p>
       <p><b>Багги</b>: соберите в гараже (это дорого), затем в меню машины у гаража ставьте улучшения: двигатель I и II, таран, шипы, броня, бак, вездеходные шины, прожекторы.</p>
       <p><b>Голос</b>: игроков рядом слышно всегда. С <b>рацией</b> вас слышат все, у кого она есть. Сообщение по рации в чате: <kbd>/r</kbd> текст.</p>
+      <h3>Кланы (мультиплеер)</h3>
+      <p><kbd>K</kbd> или F3 → «Клан» — создать клан: название и цвет. Приглашение — кнопка «В клан» в списке игроков (F3). Глава меняет название, цвет, PvP клана и показ соклановцев на карте, может исключать и передавать главенство. Свои никогда не ранят друг друга. Клановый чат: <kbd>/c</kbd> текст. Название клана видно в чате и над головой.</p>
       <h3>Новое в 4.1</h3>
       <p><b>Дом</b>: вкладка «Дом» в стройке — кирпичные стены (кирпич обжигают на костре), стены с окном, двери обычные и с кодом, деревянные и бетонные крыши. Крыше нужна опора — стена рядом. <kbd>X</kbd> снимает сначала крышу.</p>
       <p><b>Вертолёт</b>: <kbd>Shift</kbd> — вверх, <kbd>Пробел</kbd> — вниз, сначала дайте винту раскрутиться. <b>Самолёт</b>: разгон по ровному месту, затем <kbd>Shift</kbd>; садитесь медленно. Свой вертолёт или самолёт собирают в гараже из труб (верстак: металл → трубы).</p>
@@ -381,6 +389,7 @@
 <script src="js/combat.js"></script>
 <script src="js/account.js"></script>
 <script src="js/game.js"></script>
+<script src="js/clans.js"></script>
 <script src="js/net.js"></script>
 <script src="js/voice.js"></script>
 <script src="js/render.js"></script>

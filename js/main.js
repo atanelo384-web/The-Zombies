@@ -161,7 +161,7 @@ App.toMenu = () => {
 function setPause(p) {
   const G = App.game; if (!G) return;
   G.paused = p; $('#pause').classList.toggle('hidden', !p);
-  if (p) { $('#pausedaily').innerHTML = '<div class="phead small">Задания дня</div>' + TZ.Daily.html(); App.ui.closeInventory(); $('#btnSave').classList.toggle('hidden', G.role === 'client'); $('#btnInvite').classList.toggle('hidden', G.role !== 'host'); $('#pausenet').textContent = G.net ? (G.role === 'host' ? `Сервер: ${G.serverName} · игроков ${G.players.size}` : `Вы на сервере «${G.serverName}». Игра не останавливается.`) : ''; }
+  if (p) { $('#pausedaily').innerHTML = '<div class="phead small">Задания дня</div>' + TZ.Daily.html(); App.ui.closeInventory(); $('#btnSave').classList.toggle('hidden', G.role === 'client'); $('#btnInvite').classList.toggle('hidden', G.role !== 'host'); $('#btnClan').classList.toggle('hidden', !G.net); $('#pausenet').textContent = G.net ? (G.role === 'host' ? `Сервер: ${G.serverName} · игроков ${G.players.size}` : `Вы на сервере «${G.serverName}». Игра не останавливается.`) : ''; }
 }
 // ---------------------------------------------------------------- invite (links + QR for phones)
 App.invite = () => {
@@ -202,7 +202,7 @@ App.phrases = () => {
   $('#phrases').classList.add('show'); TZ.audio.play('ui_open');
 };
 // ---------------------------------------------------------------- dialogs
-App.confirm = (text, yes) => { $('#cfmtext').textContent = text; $('#cfmyes').textContent = 'Да'; $('#cfmno').classList.remove('hidden'); $('#confirm').classList.add('show'); $('#cfmyes').onclick = () => { $('#confirm').classList.remove('show'); yes && yes(); }; $('#cfmno').onclick = () => $('#confirm').classList.remove('show'); };
+App.confirm = (text, yes) => { $('#cfmtext').textContent = text; $('#cfmyes').textContent = 'Да'; $('#cfmno').textContent = 'Нет'; $('#cfmno').classList.remove('hidden'); $('#confirm').classList.add('show'); $('#cfmyes').onclick = () => { $('#confirm').classList.remove('show'); yes && yes(); }; $('#cfmno').onclick = () => $('#confirm').classList.remove('show'); };
 App.alert = (text, ok) => { $('#cfmtext').textContent = text; $('#cfmyes').textContent = 'OK'; $('#cfmno').classList.add('hidden'); $('#confirm').classList.add('show'); $('#cfmyes').onclick = () => { $('#confirm').classList.remove('show'); ok && ok(); }; };
 App.prompt = (text, val, done) => { $('#cfmtext').innerHTML = `${TZ.esc(text)}<input id="cfmin" class="px-input" maxlength="28" value="${TZ.esc(val || '')}" style="margin-top:10px">`; $('#cfmyes').textContent = 'OK'; $('#cfmno').classList.remove('hidden'); $('#confirm').classList.add('show'); setTimeout(() => $('#cfmin').focus(), 30); $('#cfmyes').onclick = () => { const v = $('#cfmin').value; $('#confirm').classList.remove('show'); done(v); }; $('#cfmno').onclick = () => $('#confirm').classList.remove('show'); };
 
@@ -223,6 +223,7 @@ function bindUI() {
   click('#btnResume', () => setPause(false));
   click('#btnSave', () => { const G = App.game; if (!G) return; if (G.save()) { $('#btnSave').textContent = 'Сохранено ✓'; setTimeout(() => $('#btnSave').textContent = 'Сохранить мир', 1500); } });
   click('#btnInvite', () => App.invite());
+  click('#btnClan', () => { setPause(false); TZ.ClanUI.open(); }); click('#btnClan2', () => { $('#plist').classList.remove('show'); TZ.ClanUI.open(); });
   click('#btnMenu', () => App.confirm('Выйти в главное меню? Мир будет сохранён.', () => App.toMenu()));
   click('#deathrespawn', () => { $('#death').classList.remove('show'); App.game.respawn(); });
   click('#deathload', () => { const G = App.game; const m = TZ.Saves.meta(G.worldId); App.game = null; if (m) App.startSolo(m); });
@@ -310,7 +311,7 @@ function globalKeys() {
   if (I.hit('F11')) toggleFull();
   if (App.state !== 'game' || !G) return;
   if (ui.chatOpen) return;
-  const top = ['settings', 'help', 'confirm', 'pview', 'keypad', 'bigmap', 'plist', 'phrases', 'invite'].find(id => $('#' + id).classList.contains('show'));
+  const top = ['settings', 'help', 'confirm', 'pview', 'keypad', 'bigmap', 'clanp', 'plist', 'phrases', 'invite'].find(id => $('#' + id).classList.contains('show'));
   if (I.hit('Escape')) {
     if (top) { $('#' + top).classList.remove('show'); return; }
     if ($('#craft').classList.contains('show')) { ui.closeCraft(); return; }
@@ -323,6 +324,7 @@ function globalKeys() {
   }
   if (top === 'keypad' || top === 'confirm' || top === 'pview' || top === 'settings') return;
   if (I.act('players')) { ui.togglePlist(); return; }
+  if (I.act('clan') && G.net) { TZ.ClanUI.toggle(); return; }
   if (G.paused && !$('#craft').classList.contains('show')) return;
   if (G.mode === 'dead') return;
   if (I.act('chat')) { ui.openChat(); return; }
