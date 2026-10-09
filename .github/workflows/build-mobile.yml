@@ -19,7 +19,6 @@ jobs:
         with: { node-version: 22 }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: 21 }
-      - uses: android-actions/setup-android@v3
       - run: npm install
       - run: node scripts/copy-web.mjs && npx cap sync android
       - run: chmod +x android/gradlew && cd android && ./gradlew assembleDebug --no-daemon
