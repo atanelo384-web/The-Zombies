@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d09">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="The Zombies">
+<meta name="format-detection" content="telephone=no">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>The Zombies</title>
+<link rel="icon" href="assets/icon.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- ======================= IN-GAME HUD ======================= -->
+<div id="ui" class="hidden">
+  <div id="touch"></div>
+  <div id="voicebadge"><img data-ic="mic" alt=""><span>Микрофон включён</span></div>
+  <div id="voicetalk"></div>
+  <div id="topleft">
+    <div id="bars"></div>
+    <div id="status"></div>
+    <div id="quest" class="px-box"></div>
+    <div id="team" class="px-box"></div>
+  </div>
+  <div id="topright">
+    <div id="clock" class="px-box"></div>
+    <div id="mapwrap"><canvas id="minimap" width="190" height="190"></canvas><span class="cmp n">N</span><span class="cmp e">E</span><span class="cmp s">S</span><span class="cmp w">W</span><div id="biomeTag"></div></div>
+  </div>
+  <div id="log"></div>
+  <div id="chat"><div id="chatlog"></div><div id="chatin" class="hidden"><span>Чат:</span><input id="chatinput" maxlength="160" autocomplete="off" spellcheck="false"></div></div>
+  <div id="prompt"></div>
+  <div id="hotbar" class="px-panel"></div>
+  <div id="buildbar" class="px-panel"></div>
+  <div id="banner"></div>
+  <div id="toasts"></div>
+  <div id="keyhint"><kbd>B</kbd> стройка <kbd>C</kbd> крафт <kbd>Tab</kbd> инвентарь <kbd>M</kbd> карта <kbd>T</kbd> чат <kbd>F3</kbd> игроки <kbd>H</kbd> помощь</div>
+
+  <div id="inv" class="px-panel side">
+    <div class="phead">Инвентарь <button class="px-x" data-close="inv"></button></div>
+    <div class="invtop">
+      <div class="doll"><canvas id="dollcv" width="88" height="104"></canvas></div>
+      <div class="eqslots">
+        <div class="eqs" data-slot="head"><span>Голова</span><div class="cell"></div></div>
+        <div class="eqs" data-slot="body"><span>Тело</span><div class="cell"></div></div>
+        <div class="eqs" data-slot="back"><span>Спина</span><div class="cell"></div></div>
+      </div>
+      <div class="invstats" id="invstats"></div>
+    </div>
+    <div class="tabs" id="invtabs"></div>
+    <div id="invgrid" class="grid scroll"></div>
+    <div class="pfoot"><span id="invw"></span></div>
+    <div id="invhint" class="phint"></div>
+  </div>
+  <div id="chestp" class="px-panel side2">
+    <div class="phead"><span id="chesttitle">Ящик</span> <button class="px-x" data-close="chestp"></button></div>
+    <div id="chestgrid" class="grid scroll"></div>
+    <div class="pfoot"><button class="px-btn small" id="chestall">Сложить все материалы</button></div>
+    <div class="phint">ЛКМ — забрать (Shift — всё). В инвентаре: ЛКМ — положить.</div>
+  </div>
+  <div id="vehp" class="px-panel side2">
+    <div class="phead"><span id="vehtitle">Машина</span> <button class="px-x" data-close="vehp"></button></div>
+    <div id="vehbody"></div>
+  </div>
+  <div id="tooltip"></div>
+
+  <div id="craft" class="modal"><div class="mbox px-panel wide">
+    <div class="phead">Крафт <button class="px-x" data-close="craft"></button></div>
+    <div class="tabs" id="crafttabs"></div>
+    <div id="craftbench" class="sub"></div>
+    <div id="craftlist" class="scroll"></div>
+  </div></div>
+  <div id="dialog" class="modal"><div class="mbox px-panel dlg">
+    <img id="dlgface" alt=""><div class="dlgbody"><div id="dlgname"></div><div id="dlgtext"></div><div id="dlgbtns"></div></div>
+  </div></div>
+  <div id="keypad" class="modal"><div class="mbox px-panel kp">
+    <div class="phead"><span id="kptitle">Кодовый замок</span> <button class="px-x" data-close="keypad"></button></div>
+    <div id="kpsub" class="sub"></div>
+    <div id="kpscreen">____</div>
+    <div id="kpkeys"></div>
+    <div id="kpmsg"></div>
+  </div></div>
+
+  <div id="plist" class="modal light"><div class="mbox px-panel wide">
+    <div class="phead"><span id="plisttitle">Игроки на сервере</span> <span class="phead-r"><button class="px-btn small" id="btnClan2">Клан</button><button class="px-x" data-close="plist"></button></span></div>
+    <div id="plistbody" class="scroll"></div>
+    <div class="phint">Нажмите на игрока, чтобы открыть его профиль. Закрыть — F3.</div>
+  </div></div>
+  <div id="clanp" class="modal light"><div class="mbox px-panel wide clanbox">
+    <div class="phead">Клан <button class="px-x" data-close="clanp"></button></div>
+    <div id="clanbody" class="scroll"></div>
+  </div></div>
+  <div id="bigmap" class="modal"><div class="mbox px-panel mapbox">
+    <div class="phead">Карта мира <span class="sub inline" id="mapcoords"></span><button class="px-x" data-close="bigmap"></button></div>
+    <canvas id="bigmapcv"></canvas>
+    <div class="phint">Колесо — масштаб · Перетаскивание — сдвиг · M — закрыть</div>
+  </div></div>
+
+  <div id="pause" class="screen dim hidden">
+    <div class="title">ПАУЗА</div>
+    <div class="mbtns">
+      <button class="px-btn big" id="btnResume">Продолжить</button>
+      <button class="px-btn big" id="btnSave">Сохранить мир</button>
+      <button class="px-btn big" id="btnInvite">Пригласить друзей</button>
+      <button class="px-btn big" id="btnClan">Клан</button>
+      <button class="px-btn big" id="btnSettings2">Настройки</button>
+      <button class="px-btn big" id="btnHelp2">Как играть</button>
+      <button class="px-btn big ghost" id="btnMenu">Выйти в меню</button>
+    </div>
+    <div id="pausenet" class="sub"></div>
+    <div id="pausedaily" class="px-box"></div>
+  </div>
+  <div id="death" class="modal top"><div class="mbox px-panel-red center">
+    <div class="title red">ВЫ ПОГИБЛИ</div>
+    <div class="sub">Вещи остались в рюкзаке на месте гибели. Найдите его!</div>
+    <div id="deathstats"></div>
+    <div class="mbtns row">
+      <button class="px-btn big green" id="deathrespawn">Возродиться</button>
+      <button class="px-btn big" id="deathload">Загрузить сохранение</button>
+      <button class="px-btn big ghost" id="deathmenu">В меню</button>
+    </div>
+  </div></div>
+  <div id="victory" class="modal top"><div class="mbox px-panel-gold center">
+    <div class="title gold">ВЫ ВЫЖИЛИ</div>
+    <div class="sub">Вертолёт уносит вас прочь от мёртвых земель.</div>
+    <div id="winstats"></div>
+    <div class="mbtns row"><button class="px-btn big green" id="wincont">Остаться и выживать</button><button class="px-btn big ghost" id="winmenu">В меню</button></div>
+  </div></div>
+</div>
+
+<!-- ======================= MENUS ======================= -->
+<div id="menu" class="screen hidden">
+  <canvas id="menufx"></canvas>
+  <div class="menuvig"></div>
+  <div class="menucol">
+    <div class="logo"><div class="the">THE</div><img class="logoimg" id="logoimg" alt="ZOMBIES"><div class="zom fallback">ZOMBIES</div><div class="tagline">выжить · построить · отбиться</div></div>
+    <div id="servedbox" class="px-panel-gold hidden"></div>
+    <div id="tipbox" class="px-box hidden"></div>
+    <nav class="mnav">
+      <button class="mitem prime" data-go="worlds"><img data-ic="skull" alt=""><span><b>Одиночная игра</b><small>Бесконечный мир · сохранения · сложность</small></span></button>
+      <button class="mitem" data-go="mp"><img data-ic="globe" alt=""><span><b>Мультиплеер</b><small>ПК и телефоны вместе · голосовой чат</small></span></button>
+      <button class="mitem" data-go="profile"><img data-ic="user" alt=""><span><b>Профиль</b><small>Внешность · RN · медали</small></span></button>
+      <button class="mitem" data-go="achs"><img data-ic="trophy" alt=""><span><b>Достижения</b><small id="achsub">Рамки, аватары, фоны</small></span></button>
+      <button class="mitem" id="btnSettings"><img data-ic="gear" alt=""><span><b>Настройки</b><small>Звук · управление · голос · графика</small></span></button>
+      <button class="mitem" id="btnHelp"><img data-ic="help" alt=""><span><b>Как играть</b><small>Клавиши и советы</small></span></button>
+      <button class="mitem dim" id="btnQuit"><img data-ic="exit" alt=""><span><b>Выход</b></span></button>
+    </nav>
+  </div>
+  <div class="menuside">
+    <div id="acccard" class="px-panel" title="Открыть профиль"></div>
+    <div class="px-panel dailyp"><div class="phead small">Задания дня <span class="sub inline">обновляются каждый день</span></div><div id="dailylist"></div></div>
+    <div class="px-panel news">
+      <div class="phead small"><span>Обновление <span class="gold">4.2</span> · 4.1 · 4.0</span></div>
+      <ul class="scroll">
+        <li><b>Кланы</b> в мультиплеере: название, цвет, PvP, приглашения, клановый чат /c и соклановцы на карте</li>
+        <li><b>Вертолёты и самолёты</b>: Ми-2 и Ан-2 на аэродромах и военных базах (редко) или свой из труб</li>
+        <li><b>Лодки и катера</b>: лодку собирают у воды, катер можно только найти у озёр</li>
+        <li><b>Дома и крыши</b>: кирпичные стены, двери с кодом и без. Снаружи крыша скрывает дом, внутри исчезает</li>
+        <li><b>Умные напарники</b> сами ищут еду и воду, лечатся и отдают вам находки</li>
+        <li><b>Новый интерфейс</b> инвентаря, панели быстрого доступа и подсказок</li>
+        <li><b>Новые модели</b>: люди, зомби, звери и машины стали гладкими, без кубиков</li>
+        <li><b>Пустыня</b>: дюны, кактусы, оазисы, песчаные бури и высохшие зомби</li>
+        <li><b>Своя багги</b>: соберите в гараже и прокачайте — таран, шипы, броня, двигатель</li>
+        <li><b>Голосовой чат</b>: рядом слышно всех, с рацией — на любом расстоянии</li>
+        <li><b>Настройки</b>: переназначение клавиш, громкость по типам звука, голос, графика</li>
+        <li><b>Оружие</b>: лук, копьё, пожарный топор, ПКМ, гранатомёт, гвоздемёт, факел</li>
+        <li><b>Инструменты</b>: металлоискатель и лопата — ищите закопанные тайники</li>
+        <li><b>Исправлено</b>: свет фар, вход в дома, десятки мелочей</li>
+      </ul>
+    </div>
+  </div>
+  <div class="mfoot"><span class="vchip">v<span id="ver"></span></span><span>звуки: Kenney (CC0) · шрифты: Tiny5, Press Start 2P (OFL)</span></div>
+</div>
+
+<div id="worlds" class="screen hidden">
+  <div class="px-panel wpanel">
+    <div class="phead">Миры <button class="px-x" data-go="menu"></button></div>
+    <div id="worldlist" class="scroll"></div>
+    <div class="mbtns row"><button class="px-btn big green" id="btnNewWorld">Создать мир</button><button class="px-btn big ghost" data-go="menu">Назад</button></div>
+  </div>
+</div>
+<div id="newworld" class="modal top"><div class="mbox px-panel">
+  <div class="phead">Новый мир <button class="px-x" data-close="newworld"></button></div>
+  <div class="form">
+    <label>Название<input id="nwname" class="px-input" maxlength="28" value="Мой мир"></label>
+    <label>Зерно мира <small>(пусто — случайное)</small><input id="nwseed" class="px-input" maxlength="20" placeholder="например: 12345"></label>
+    <div class="flabel">Сложность</div>
+    <div class="seg" id="nwdiff"><button class="px-btn" data-v="easy">Лёгкая</button><button class="px-btn sel" data-v="normal">Нормальная</button><button class="px-btn" data-v="hard">Кошмар</button></div>
+    <label class="chk"><input type="checkbox" id="nwstory" checked><i></i> Сюжет: найти рацию и дождаться эвакуации</label>
+  </div>
+  <div class="mbtns row"><button class="px-btn big green" id="btnCreateWorld">Создать и играть</button></div>
+</div></div>
+
+<div id="mp" class="screen hidden">
+  <div class="px-panel mppanel">
+    <div class="phead">Мультиплеер <button class="px-x" data-go="menu"></button></div>
+    <div class="mpcols">
+      <div class="mpcol">
+        <div class="flabel big">Создать сервер</div>
+        <label>Название сервера<input id="srvname" class="px-input" maxlength="28"></label>
+        <label>Мир<select id="srvworld" class="px-input"></select></label>
+        <div class="flabel">Игроков максимум</div>
+        <div class="seg" id="srvmax"><button class="px-btn" data-v="2">2</button><button class="px-btn" data-v="4">4</button><button class="px-btn sel" data-v="8">8</button><button class="px-btn" data-v="16">16</button></div>
+        <label class="chk"><input type="checkbox" id="srvpvp"><i></i> PvP: игроки могут ранить друг друга</label>
+        <label class="nbonly">Порт<input id="srvport" class="px-input" value="27015" maxlength="5"></label>
+        <button class="px-btn big green" id="btnHost">Запустить сервер</button>
+      </div>
+      <div class="mpcol">
+        <div class="flabel big">Подключиться</div>
+        <div id="srvlist" class="scroll"></div>
+        <div class="row2"><button class="px-btn" id="btnScan">Обновить список</button><button class="px-btn" id="btnSweep">Глубокий поиск в Wi-Fi</button></div>
+        <label>IP-адрес сервера<input id="joinip" class="px-input" placeholder="192.168.0.10:27015"></label>
+        <button class="px-btn big" id="btnJoinIP">Подключиться по IP</button>
+        <div class="sub" id="mpnote"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="profile" class="screen hidden">
+  <div class="px-panel profpanel">
+    <div class="phead">Профиль <button class="px-x" data-go="menu"></button></div>
+    <div class="profcols">
+      <div id="profcard"></div>
+      <div class="profedit">
+        <div class="tabs" id="proftabs"></div>
+        <div id="profbody" class="scroll"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="achs" class="screen hidden">
+  <div class="px-panel wpanel">
+    <div class="phead">Достижения <span class="sub inline" id="achsum"></span><button class="px-x" data-go="menu"></button></div>
+    <div id="achlist" class="scroll"></div>
+  </div>
+</div>
+<div id="setup" class="screen hidden">
+  <div class="px-panel setuppanel">
+    <div class="phead">Создайте выжившего</div>
+    <div class="setupcols">
+      <canvas id="setupcv" width="160" height="190"></canvas>
+      <div class="form">
+        <label>Имя (ник)<input id="setupname" class="px-input" maxlength="16" placeholder="Например: Волк"></label>
+        <div id="setuplook"></div>
+      </div>
+    </div>
+    <div class="mbtns row"><button class="px-btn big green" id="btnSetupDone">Начать</button></div>
+  </div>
+</div>
+
+<div id="settings" class="modal top"><div class="mbox px-panel wide setbox">
+  <div class="phead">Настройки <button class="px-x" data-close="settings"></button></div>
+  <div class="stabs">
+    <button class="stab on" data-st="snd">Звук</button><button class="stab" data-st="gfx">Графика</button><button class="stab" data-st="ctl">Управление</button>
+    <button class="stab" data-st="voice">Голос</button><button class="stab" data-st="ui">Интерфейс</button><button class="stab" data-st="touch">Телефон</button>
+  </div>
+  <div class="spage scroll show" data-sp="snd">
+    <label class="set">Общая громкость <input type="range" min="0" max="1" step="0.05" data-set="master"><b class="sval"></b></label>
+    <label class="set">Музыка <input type="range" min="0" max="1" step="0.05" data-set="music"><b class="sval"></b></label>
+    <label class="set">Выстрелы, удары, зомби <input type="range" min="0" max="1" step="0.05" data-set="sfx"><b class="sval"></b></label>
+    <label class="set">Природа и погода <input type="range" min="0" max="1" step="0.05" data-set="amb"><b class="sval"></b></label>
+    <label class="set">Звуки интерфейса <input type="range" min="0" max="1" step="0.05" data-set="uivol"><b class="sval"></b></label>
+    <label class="set">Голоса игроков <input type="range" min="0" max="1.5" step="0.05" data-set="voicevol"><b class="sval"></b></label>
+    <label class="chk"><input type="checkbox" data-set="muteBg"><i></i> Выключать звук, когда окно свёрнуто</label>
+  </div>
+  <div class="spage scroll" data-sp="gfx">
+    <label class="set">Масштаб мира <input type="range" min="-1" max="2" step="1" data-set="zoom"><b class="sval"></b></label>
+    <label class="set">Частицы (кровь, искры, дым) <select class="px-input" data-set="particles"><option value="0.35">Мало</option><option value="0.7">Средне</option><option value="1">Много</option></select></label>
+    <label class="chk"><input type="checkbox" data-set="weatherFx"><i></i> Дождь, снег, туман и песчаные бури</label>
+    <label class="chk"><input type="checkbox" data-set="shake"><i></i> Тряска экрана</label>
+    <label class="chk"><input type="checkbox" data-set="dmgNums"><i></i> Цифры урона и «В ГОЛОВУ!»</label>
+    <label class="chk"><input type="checkbox" data-set="vignette"><i></i> Виньетка по краям экрана</label>
+    <label class="chk"><input type="checkbox" data-set="fps"><i></i> Показывать FPS</label>
+    <button class="px-btn" id="btnFull">Полноэкранный режим (F11)</button>
+  </div>
+  <div class="spage scroll" data-sp="ctl">
+    <p class="shint">Нажмите на клавишу, чтобы назначить новую. <kbd>Esc</kbd> — отмена, <kbd>Backspace</kbd> — очистить. Можно назначить кнопки мыши 3–5.</p>
+    <div id="bindlist" class="bindlist"></div>
+    <div class="mbtns row"><button class="px-btn" id="btnBindReset">Сбросить по умолчанию</button></div>
+  </div>
+  <div class="spage scroll" data-sp="voice">
+    <label class="set">Режим микрофона <select class="px-input" data-set="voiceMode" data-str="1"><option value="off">Выключен</option><option value="ptt">По кнопке (рация)</option><option value="open">Всегда включён</option></select></label>
+    <label class="set">Чувствительность (для «всегда включён») <input type="range" min="0" max="1" step="0.05" data-set="vad"><b class="sval"></b></label>
+    <label class="set">Усиление микрофона <input type="range" min="0" max="2" step="0.1" data-set="micGain"><b class="sval"></b></label>
+    <label class="set">Микрофон <select class="px-input" id="micSel" data-set="micDev" data-str="1"><option value="">По умолчанию</option></select></label>
+    <label class="chk"><input type="checkbox" data-set="voice3d"><i></i> Объёмный звук: голоса тише с расстоянием и слышны со стороны говорящего</label>
+    <div class="vtest"><button class="px-btn" id="btnMicTest">Проверить микрофон</button><div class="vmeter"><i id="vmeterBar"></i></div></div>
+    <p class="shint" id="voiceNote">Голос слышен игрокам рядом с вами (до 25 клеток). С предметом «Рация» — всем игрокам с рацией на любом расстоянии. Кнопка разговора: <kbd id="pttKey">Z</kbd> (меняется во вкладке «Управление»).</p>
+  </div>
+  <div class="spage scroll" data-sp="ui">
+    <label class="set">Размер интерфейса <select class="px-input" data-set="uiScale"><option value="0">Авто</option><option value="0.6">60%</option><option value="0.7">70%</option><option value="0.8">80%</option><option value="0.9">90%</option><option value="1">100%</option><option value="1.15">115%</option><option value="1.3">130%</option></select></label>
+    <label class="set">Прозрачность чата <input type="range" min="0.2" max="1" step="0.05" data-set="chatAlpha"><b class="sval"></b></label>
+    <label class="chk"><input type="checkbox" data-set="keyHints"><i></i> Подсказки клавиш внизу экрана</label>
+    <label class="chk"><input type="checkbox" data-set="showNames"><i></i> Имена игроков и выживших над головой</label>
+    <label class="chk"><input type="checkbox" data-set="minimap"><i></i> Мини-карта</label>
+  </div>
+  <div class="spage scroll" data-sp="touch">
+    <label class="set">Сенсорное управление <select class="px-input" data-set="touch"><option value="-1">Авто</option><option value="1">Включено</option><option value="0">Выключено</option></select></label>
+    <label class="set">Размер кнопок <input type="range" min="0.7" max="1.4" step="0.05" data-set="tSize"><b class="sval"></b></label>
+    <label class="set">Непрозрачность кнопок <input type="range" min="0.3" max="1" step="0.05" data-set="tAlpha"><b class="sval"></b></label>
+    <label class="chk"><input type="checkbox" data-set="tLeft"><i></i> Для левши: джойстик ходьбы справа, прицел слева</label>
+    <label class="chk"><input type="checkbox" data-set="aimAssist"><i></i> Помощь в прицеливании при коротком касании</label>
+    <label class="chk"><input type="checkbox" data-set="vibrate"><i></i> Вибрация при попадании по вам (Android)</label>
+  </div>
+</div></div>
+<div id="help" class="modal top"><div class="mbox px-panel wide">
+  <div class="phead">Как играть <button class="px-x" data-close="help"></button></div>
+  <div class="helpgrid scroll">
+    <div><h3>Управление</h3>
+      <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> — движение, <kbd>Shift</kbd> — бег</p>
+      <p><kbd>ЛКМ</kbd> — стрелять, бить, рубить; <kbd>R</kbd> — перезарядка</p>
+      <p><kbd>1</kbd>–<kbd>8</kbd>, колесо — оружие; <kbd>Q</kbd> — лечение; <kbd>L</kbd> — фонарик</p>
+      <p><kbd>E</kbd> — обыскать, говорить, сесть в машину, использовать</p>
+      <p><kbd>Tab</kbd> — инвентарь и одежда; <kbd>C</kbd> — крафт; <kbd>B</kbd> — стройка (<kbd>X</kbd> — разобрать)</p>
+      <p><kbd>M</kbd> — карта мира; <kbd>F</kbd> — приказ команде; <kbd>T</kbd>/<kbd>Enter</kbd> — чат; <kbd>F3</kbd> — игроки</p>
+      <p><kbd>V</kbd> — быстрые фразы; <kbd>G</kbd> — метка на карте там, куда смотрите (или клик по большой карте)</p>
+      <p><kbd>Z</kbd> (удерживать) — голосовой чат; <kbd>F1</kbd> — эта справка. Все клавиши меняются в «Настройки → Управление».</p>
+      <h3>Телефон и планшет</h3>
+      <p>Левый джойстик — ходить (до упора — бег). Правый — целиться и стрелять; короткое касание — удар по ближайшему врагу. Табличка внизу экрана — действие (обыскать, сесть в машину). В машине левый джойстик — газ и руль.</p>
+      <h3>Инструменты 3.0</h3>
+      <p><b>Удочка</b> — E у воды (зимой — у льда). <b>Молоток</b> — удар чинит свою постройку, E у стены — улучшить. <b>Ракетница</b> — свет, огонь и раз в день сброс груза. <b>Приманка</b> уводит зомби. <b>ПНВ</b> — видно ночью. <b>Собака</b>: ошейник + мясо, E рядом с ней.</p>
+      <h3>Новое в 4.0</h3>
+      <p><b>Металлоискатель</b> в руках пищит у закопанного тайника — копайте <b>лопатой</b>. <b>Лук</b> и <b>копьё</b> делаются руками, <b>гвоздемёт</b>, <b>гранатомёт</b> и <b>рация</b> — на верстаке. <b>Факел</b> светит и поджигает.</p>
+      <p><b>Багги</b>: соберите в гараже (это дорого), затем в меню машины у гаража ставьте улучшения: двигатель I и II, таран, шипы, броня, бак, вездеходные шины, прожекторы.</p>
+      <p><b>Голос</b>: игроков рядом слышно всегда. С <b>рацией</b> вас слышат все, у кого она есть. Сообщение по рации в чате: <kbd>/r</kbd> текст.</p>
+      <h3>Кланы (мультиплеер)</h3>
+      <p><kbd>K</kbd> или F3 → «Клан» — создать клан: название и цвет. Приглашение — кнопка «В клан» в списке игроков (F3). Глава меняет название, цвет, PvP клана и показ соклановцев на карте, может исключать и передавать главенство. Свои никогда не ранят друг друга. Клановый чат: <kbd>/c</kbd> текст. Название клана видно в чате и над головой.</p>
+      <h3>Новое в 4.1</h3>
+      <p><b>Дом</b>: вкладка «Дом» в стройке — кирпичные стены (кирпич обжигают на костре), стены с окном, двери обычные и с кодом, деревянные и бетонные крыши. Крыше нужна опора — стена рядом. <kbd>X</kbd> снимает сначала крышу.</p>
+      <p><b>Вертолёт</b>: <kbd>Shift</kbd> — вверх, <kbd>Пробел</kbd> — вниз, сначала дайте винту раскрутиться. <b>Самолёт</b>: разгон по ровному месту, затем <kbd>Shift</kbd>; садитесь медленно. Свой вертолёт или самолёт собирают в гараже из труб (верстак: металл → трубы).</p>
+      <p><b>Лодка</b> собирается руками у воды, <b>катер</b> находят у озёр. Выйти — <kbd>E</kbd> у берега.</p>
+      <p><b>Напарники</b> сами едят, пьют, лечатся и обыскивают ящики рядом. Еда в ящиках базы им тоже подходит.</p>
+      <h3>Машина</h3>
+      <p><kbd>W</kbd>/<kbd>S</kbd> — газ и тормоз, <kbd>A</kbd>/<kbd>D</kbd> — руль, <kbd>Пробел</kbd> — ручник, <kbd>H</kbd> — сигнал, <kbd>E</kbd> — выйти.</p>
+      <p>Брошенные машины сломаны. Нужны топливо, целые колёса, аккумулятор и ремонт ремкомплектом с гаечным ключом. Сильно разбитая машина загорается и взрывается, после этого её можно только разобрать на металл.</p>
+    </div>
+    <div><h3>Выживание</h3>
+      <p><b>День</b> — время для вылазок. Мир бесконечный: города, заправки, фермы, военные базы, лаборатории.</p>
+      <p><b>Ночь</b> — с 20:30 к вам идёт орда. Стройте стены, ворота, ловушки и турели.</p>
+      <p><b>Биомы.</b> В тайге холодно: нужны парка, ушанка и костёр. На болоте ночью ядовитый туман: нужен противогаз. В пустоши быстрее хочется пить. В <b>пустыне</b> днём жажда вдвое сильнее, ночью холодно, бывают песчаные бури; там чаще встречаются багги и высохшие зомби.</p>
+      <p><b>Кодовые ворота</b> пропускают только тех, кто знает код. Другие игроки видят вашу базу за забором как чёрную область.</p>
+      <p><b>Аккаунт.</b> За ночи, боссов и достижения растёт RN-рейтинг и уровень. Смерть отнимает RN. Медали, рамки и фоны открываются за достижения.</p>
+    </div>
+  </div>
+</div></div>
+<div id="phrases" class="modal top"><div class="mbox px-panel">
+  <div class="phead">Быстрые фразы <button class="px-x" data-close="phrases"></button></div>
+  <div class="phgrid" id="phgrid"></div>
+  <div class="phint">Фраза уходит в чат всем игрокам. «Метка» ставит отметку на карте и мини-карте для всей команды.</div>
+</div></div>
+<div id="ctx" class="px-panel"></div>
+<div id="rotate"><img id="rotimg" alt=""><div>Поверните телефон горизонтально</div><div class="sub">The Zombies играется в альбомной ориентации</div></div>
+<div id="invite" class="modal top"><div class="mbox px-panel invbox">
+  <div class="phead">Пригласить друзей <button class="px-x" data-close="invite"></button></div>
+  <div id="invbody"></div>
+</div></div>
+<div id="confirm" class="modal top"><div class="mbox px-panel center small">
+  <div id="cfmtext" class="sub big"></div>
+  <div class="mbtns row"><button class="px-btn big red" id="cfmyes">Да</button><button class="px-btn big" id="cfmno">Отмена</button></div>
+</div></div>
+<div id="pview" class="modal top"><div class="mbox px-panel pviewbox">
+  <div class="phead">Профиль игрока <button class="px-x" data-close="pview"></button></div>
+  <div id="pviewbody"></div>
+</div></div>
+
+<div id="fps"></div>
+<div id="loading" class="screen"><div class="logo small"><div class="the">THE</div><div class="zom">ZOMBIES</div></div><div id="loadbar"><i></i></div><div id="loadtxt">Загрузка...</div><div id="loadtip">Совет: ночью зомби идут на свет и шум. Стройте стены заранее.</div></div>
+
+<script src="js/lib/lz-string.min.js"></script>
+<script src="js/lib/qrcode.js"></script>
+<script src="js/core.js"></script>
+<script src="js/data.js"></script>
+<script src="js/art_world.js"></script>
+<script src="js/art_chars.js"></script>
+<script src="js/voxel.js"></script>
+<script src="js/models.js"></script>
+<script src="js/models_veh.js"></script>
+<script src="js/chars.js"></script>
+<script src="js/world.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/vehicles.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/account.js"></script>
+<script src="js/game.js"></script>
+<script src="js/clans.js"></script>
+<script src="js/net.js"></script>
+<script src="js/voice.js"></script>
+<script src="js/render.js"></script>
+<script src="js/sounds_data.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/uikit.js"></script>
+<script src="js/touch.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
