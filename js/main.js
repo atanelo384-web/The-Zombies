@@ -320,13 +320,10 @@ function bindUI() {
   document.querySelectorAll('.stab').forEach(b => b.addEventListener('click', () => { TZ.audio.play('ui'); document.querySelectorAll('.stab').forEach(x => x.classList.toggle('on', x === b)); document.querySelectorAll('.spage').forEach(p => p.classList.toggle('show', p.dataset.sp === b.dataset.st)); if (b.dataset.st === 'voice' && TZ.Voice) TZ.Voice.listMics(); if (b.dataset.st === 'ctl') buildBinds(); }));
   click('#btnBindReset', () => App.confirm('Вернуть все клавиши по умолчанию?', () => { TZ.input.resetBinds(); buildBinds(); App.ui && App.ui.dirty(); }));
   click('#btnMicTest', () => TZ.Voice && TZ.Voice.test());
-  // language + online server address
+  // language
   const langGrid = () => { const g = $('#langgrid'); g.innerHTML = ''; for (const [c, n] of TZ.LANGS) { const b = document.createElement('button'); b.className = 'px-btn langbtn' + (c === TZ.lang ? ' sel' : ''); b.textContent = n; b.onclick = () => { TZ.audio.play('ui'); TZ.setLang(c); }; g.append(b); } };
   langGrid();
   TZ.onLang = () => { langGrid(); if (App.state === 'menu' && TZ.Menu.cur && TZ.Menu.cur !== 'login') TZ.Menu.show(TZ.Menu.cur); if (App.ui) App.ui.dirty(); };
-  const su = $('#srvurl'); su.value = TZ.store.get('serverUrl', '') || '';
-  su.addEventListener('keydown', (e) => e.stopPropagation());
-  su.addEventListener('change', () => { const v = su.value.trim(); if (v && !/^https?:\/\//.test(v)) { su.value = ''; return; } TZ.store.set('serverUrl', v); TZ.Online.disconnect(); TZ.Online.restore(); });
   buildBinds(); applySettings();
 }
 // ---------------------------------------------------------------- settings helpers
