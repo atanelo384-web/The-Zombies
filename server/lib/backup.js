@@ -21,7 +21,26 @@ function client(cfg) {
   return { pipeline };
 }
 
+// ---------------------------------------------------------------- Google Drive (through your Google Apps Script)
+async function gs(g, body) {
+  const r = await fetch(g.url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ secret: g.secret }, body)), redirect: 'follow' });
+  const txt = await r.text();
+  let j; try { j = JSON.parse(txt); } catch (e) { throw new Error('Google Script ответил не JSON: ' + txt.slice(0, 120)); }
+  if (!j.ok) throw new Error('Google Script: ' + (j.error || 'ошибка'));
+  return j;
+}
+async function restoreDrive(g, file) {
+  const j = await gs(g, { action: 'load' });
+  if (!j.data) { console.log('Резервная копия: на Google Диске пока пусто — начинаем с новой базы'); return false; }
+  const buf = zlib.gunzipSync(Buffer.from(j.data, 'base64'));
+  fs.writeFileSync(file, buf);
+  for (const ext of ['-wal', '-shm']) try { fs.unlinkSync(file + ext); } catch (e) { }
+  console.log(`Резервная копия восстановлена с Google Диска: ${(buf.length / 1024).toFixed(0)} КБ (${j.name || ''})`);
+  return true;
+}
+
 async function restore(cfg, file) {
+  if (cfg.gdrive && cfg.gdrive.url && !(cfg.turso && cfg.turso.url)) return restoreDrive(cfg.gdrive, file);
   if (!cfg.turso || !cfg.turso.url) return false;
   const T = client(cfg.turso);
   await T.pipeline([['CREATE TABLE IF NOT EXISTS snap (seq INTEGER, i INTEGER, data BLOB, PRIMARY KEY (seq, i))'], ['CREATE TABLE IF NOT EXISTS snap_meta (seq INTEGER PRIMARY KEY, parts INTEGER, size INTEGER, at INTEGER)']]);
@@ -41,8 +60,9 @@ async function restore(cfg, file) {
 }
 
 function start(cfg, db, file) {
-  if (!cfg.turso || !cfg.turso.url) return { dirty() { }, now: async () => { } };
-  const T = client(cfg.turso);
+  const drive = cfg.gdrive && cfg.gdrive.url && !(cfg.turso && cfg.turso.url) ? cfg.gdrive : null;
+  if (!drive && (!cfg.turso || !cfg.turso.url)) return { dirty() { }, now: async () => { } };
+  const T = drive ? null : client(cfg.turso);
   let dirty = true, busy = false, last = 0;
   async function save(reason) {
     if (busy || !dirty) return; busy = true; dirty = false;
@@ -51,6 +71,7 @@ function start(cfg, db, file) {
       try { fs.unlinkSync(tmp); } catch (e) { }
       db.raw.exec(`VACUUM INTO '${tmp.replace(/'/g, "''")}'`);
       const gz = zlib.gzipSync(fs.readFileSync(tmp), { level: 6 }); fs.unlinkSync(tmp);
+      if (drive) { await gs(drive, { action: 'save', data: gz.toString('base64') }); last = Date.now(); if (reason) console.log(`Резервная копия на Google Диск: ${(gz.length / 1024).toFixed(0)} КБ (${reason})`); return; }
       const seq = Date.now(), parts = Math.ceil(gz.length / CHUNK);
       for (let i = 0; i < parts; i += 4) await T.pipeline(Array.from({ length: Math.min(4, parts - i) }, (_, k) => ['INSERT INTO snap (seq, i, data) VALUES (?,?,?)', [seq, i + k, gz.subarray((i + k) * CHUNK, (i + k + 1) * CHUNK)]]));
       await T.pipeline([['INSERT INTO snap_meta (seq, parts, size, at) VALUES (?,?,?,?)', [seq, parts, gz.length, Date.now()]], ['DELETE FROM snap WHERE seq < (SELECT MIN(seq) FROM (SELECT seq FROM snap_meta ORDER BY seq DESC LIMIT 3))'], ['DELETE FROM snap_meta WHERE seq < (SELECT MIN(seq) FROM (SELECT seq FROM snap_meta ORDER BY seq DESC LIMIT 3))']]);
@@ -59,7 +80,7 @@ function start(cfg, db, file) {
     } catch (e) { dirty = true; console.error('Резервная копия не удалась:', e.message); }
     finally { busy = false; }
   }
-  setInterval(() => save(), 3 * 60e3).unref();
+  setInterval(() => save(), (drive ? 2 : 3) * 60e3).unref();
   return { dirty() { dirty = true; }, now: (reason) => { dirty = true; return save(reason || 'сейчас'); }, lastAt: () => last };
 }
 module.exports = { restore, start };

@@ -32,7 +32,8 @@ function load(dir) {
   if (E.YOOMONEY_WALLET) cfg.yoomoney.wallet = E.YOOMONEY_WALLET;
   if (E.YOOMONEY_SECRET) cfg.yoomoney.secret = E.YOOMONEY_SECRET;
   if (E.SMTP_HOST) Object.assign(cfg.smtp, { host: E.SMTP_HOST, port: +(E.SMTP_PORT || 465), user: E.SMTP_USER || '', pass: E.SMTP_PASS || '', from: E.SMTP_FROM || E.SMTP_USER || '' });
-  if (E.MAIL_WEBHOOK_URL) cfg.mailWebhook = { url: E.MAIL_WEBHOOK_URL, secret: E.MAIL_WEBHOOK_SECRET || '' };
+  const gsUrl = E.GOOGLE_SCRIPT_URL || E.MAIL_WEBHOOK_URL, gsSecret = E.GOOGLE_SCRIPT_SECRET || E.MAIL_WEBHOOK_SECRET || '';
+  if (gsUrl) { cfg.mailWebhook = { url: gsUrl, secret: gsSecret }; if (!E.TURSO_URL && E.BACKUP !== 'off') cfg.gdrive = { url: gsUrl, secret: gsSecret }; }
   if (E.TURSO_URL) cfg.turso = { url: E.TURSO_URL, token: E.TURSO_TOKEN || '' };
   if (E.SERVER_PRICE) cfg.serverPrice = +E.SERVER_PRICE;
   cfg.downloads = Object.assign({}, cfg.downloads || {}, E.DOWNLOAD_PC ? { pc: E.DOWNLOAD_PC } : {}, E.DOWNLOAD_ANDROID ? { android: E.DOWNLOAD_ANDROID } : {}, E.DOWNLOAD_IOS ? { ios: E.DOWNLOAD_IOS } : {});

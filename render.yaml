@@ -1,5 +1,6 @@
 # One-click free hosting on Render (render.com): Dashboard → New → Blueprint → pick this repository.
-# Free plan: no card needed. The database is backed up to a free Turso database (see TURSO_*).
+# Free plan: no card needed. The database and e-mail codes go through your Google account:
+# paste server/deploy/google-script.gs into script.google.com (see the comments there).
 services:
   - type: web
     name: the-zombies
@@ -14,13 +15,9 @@ services:
         value: "22.14.0"
       - key: ADMIN_EMAILS
         sync: false
-      - key: TURSO_URL
+      - key: GOOGLE_SCRIPT_URL
         sync: false
-      - key: TURSO_TOKEN
-        sync: false
-      - key: MAIL_WEBHOOK_URL
-        sync: false
-      - key: MAIL_WEBHOOK_SECRET
+      - key: GOOGLE_SCRIPT_SECRET
         sync: false
       - key: YOOMONEY_WALLET
         sync: false
