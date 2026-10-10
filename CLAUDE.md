@@ -61,11 +61,15 @@ admin panel on the site, 11 languages, automatic phone/PC detection (no manual s
    https://yoomoney.ru/transfer/myservices/http-notification set URL `https://<server>/api/pay/yoomoney`,
    enable notifications, copy the secret → env `YOOMONEY_SECRET` on Render (or config.json).
    The owner must type passwords / SMS codes himself. Never make payments.
-3. **Nice domain**: owner finds `*.onrender.com` ugly. Plan: free domain from DigitalPlat FreeDomain
+3. **Website on Beget (owner's choice)**: Beget FREE plan hosts only the static site (copy the CONTENTS of `site/`
+   into the Beget site folder `public_html`), with `window.TZ_API = '<Render URL>'` in `site/js/config.js`. The Node
+   server (API, WebSockets, payments) stays on Render; DB lives on Google Drive. Server CORS already allows any origin.
+   Payment links use the server's `publicUrl`, so they still work.
+4. **Nice domain**: owner finds `*.onrender.com` ugly. Plan: free domain from DigitalPlat FreeDomain
    (`.qzz.io`, `.dpdns.org`, …) or eu.org → Render Custom Domain + CNAME. Then set `PUBLIC_URL` env.
-4. **After the address is known**: set `TZ.SERVER_URL` in `js/config.js` to it, bump nothing else, push →
+5. **After the address is known**: set `TZ.SERVER_URL` in `js/config.js` to it, bump nothing else, push →
    CI rebuilds apps. Also rebuild `mobile/apk-lite` APK if needed (`VER=5.0.0 VCODE=50 python3 build_apk.py`).
-5. Optional: Google sign-in needs `GOOGLE_CLIENT_ID` (Web OAuth client, origin = the site). Apple needs a paid
+6. Optional: Google sign-in needs `GOOGLE_CLIENT_ID` (Web OAuth client, origin = the site). Apple needs a paid
    Apple Developer account. Without them e-mail login works.
 
 ## How to run and test locally
