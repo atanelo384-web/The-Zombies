@@ -64,10 +64,10 @@ jobs:
       - run: npx electron-builder --win nsis --x64 --publish never
       - uses: actions/upload-artifact@v4
         with: { name: TheZombies-windows, path: release/*.exe }
-      - name: Publish installer to the builds-win branch
+      - name: Publish installer as a GitHub release (public download link)
         shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p /tmp/pubw && cp release/*.exe /tmp/pubw/
-          cd /tmp/pubw && git init -q -b builds-win && git add . 
-          git -c user.name=github-actions -c user.email=actions@github.com commit -qm "Windows ${GITHUB_SHA::7}"
-          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" builds-win
+          gh release delete win-latest -y --cleanup-tag || true
+          gh release create win-latest release/*.exe --title "The Zombies for Windows" --notes "Installer for Windows 10/11" --target "$GITHUB_SHA"
