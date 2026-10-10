@@ -44,15 +44,17 @@ L.render = () => {
   $('#logtabs').onclick = (e) => { const b = e.target.closest('[data-t]'); if (!b) return; L.tab = b.dataset.t; L.step = null; TZ.audio.play('ui'); L.render(); };
   const box = $('#logbody'); box.innerHTML = '';
   const err = el('div', 'logerr');
-  if (!O.base()) {
-    const sv = el('div', 'form', `<div class="warnbox">${t('Онлайн-сервер ещё не подключён. Введите его адрес (его даёт владелец игры) или играйте как гость.')}</div><input id="lsrv" class="px-input" placeholder="https://..." spellcheck="false">`);
-    const ok = el('button', 'px-btn green', t('Подключить')); ok.onclick = () => { const v = $('#lsrv').value.trim(); if (!/^https?:\/\/[^\s]+$/.test(v)) { TZ.audio.play('error'); return; } TZ.store.set('serverUrl', v); const su = $('#srvurl'); if (su) su.value = v; L.render(); };
-    sv.append(ok); box.append(sv);
+  if (!O.base()) { // the address is found automatically (TZ.Online.discover)
+    const sv = el('div', 'form', `<div class="warnbox">${L.searching ? t('Подключаюсь к онлайн-серверу…') : t('Онлайн-сервер сейчас выключен. Попробуйте позже или играйте как гость.')}</div>`);
+    const find = async () => { L.searching = true; L.render(); await O.discover(); L.searching = false; if (TZ.Menu.cur === 'login') L.render(); };
+    if (L.searching === undefined) setTimeout(find, 0);
+    else if (!L.searching) { const re = el('button', 'px-btn green', t('Повторить')); re.onclick = find; sv.append(re); }
+    box.append(sv);
   }
   const fail = (e) => { err.textContent = e.message || String(e); TZ.audio.play('error'); };
   if (L.step === 'verify') {
-    box.innerHTML = `<div class="logtitle">${t('Подтвердите почту')}</div><p class="sub">${t('Мы отправили 6-значный код на')} <b>${esc(L.email)}</b>. ${t('Проверьте папку «Спам», если письма нет.')}</p>
-      <input id="lcode" class="px-input codein" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code">`;
+    box.insertAdjacentHTML('beforeend', `<div class="logtitle">${t('Подтвердите почту')}</div><p class="sub">${t('Мы отправили 6-значный код на')} <b>${esc(L.email)}</b>. ${t('Проверьте папку «Спам», если письма нет.')}</p>
+      <input id="lcode" class="px-input codein" inputmode="numeric" maxlength="6" placeholder="000000" autocomplete="one-time-code">`);
     const ok = el('button', 'px-btn big green', t('Подтвердить'));
     ok.onclick = () => busyBtn(ok, async () => { try { await O.verify(L.email, $('#lcode').value.trim()); L.done(); } catch (e) { fail(e); } });
     const re = el('button', 'px-btn small', t('Отправить код ещё раз'));
@@ -64,9 +66,9 @@ L.render = () => {
     setTimeout(() => $('#lcode').focus(), 50); return;
   }
   if (L.step === 'forgot' || L.step === 'reset') {
-    box.innerHTML = `<div class="logtitle">${t('Восстановление пароля')}</div>
+    box.insertAdjacentHTML('beforeend', `<div class="logtitle">${t('Восстановление пароля')}</div>
       <label>${t('Почта')}<input id="lfemail" class="px-input" type="email" autocomplete="email" value="${esc(L.email)}"></label>
-      ${L.step === 'reset' ? `<p class="sub">${t('Введите код из письма и новый пароль.')}</p><input id="lfcode" class="px-input codein" inputmode="numeric" maxlength="6" placeholder="000000"><label>${t('Новый пароль')}<input id="lfpass" class="px-input" type="password" autocomplete="new-password"></label>` : `<p class="sub">${t('Если к аккаунту привязана почта, на неё придёт код.')}</p>`}`;
+      ${L.step === 'reset' ? `<p class="sub">${t('Введите код из письма и новый пароль.')}</p><input id="lfcode" class="px-input codein" inputmode="numeric" maxlength="6" placeholder="000000"><label>${t('Новый пароль')}<input id="lfpass" class="px-input" type="password" autocomplete="new-password"></label>` : `<p class="sub">${t('Если к аккаунту привязана почта, на неё придёт код.')}</p>`}`);
     const go = el('button', 'px-btn big green', L.step === 'reset' ? t('Сменить пароль и войти') : t('Получить код'));
     go.onclick = () => busyBtn(go, async () => {
       try {
@@ -79,8 +81,8 @@ L.render = () => {
     box.append(go, err, back); return;
   }
   if (L.tab === 'in') {
-    box.innerHTML = `<label>${t('Почта')}<input id="lemail" class="px-input" type="email" autocomplete="email" value="${esc(L.email)}"></label>
-      <label>${t('Пароль')}<input id="lpass" class="px-input" type="password" autocomplete="current-password"></label>`;
+    box.insertAdjacentHTML('beforeend', `<label>${t('Почта')}<input id="lemail" class="px-input" type="email" autocomplete="email" value="${esc(L.email)}"></label>
+      <label>${t('Пароль')}<input id="lpass" class="px-input" type="password" autocomplete="current-password"></label>`);
     const go = el('button', 'px-btn big green', t('Войти'));
     go.onclick = () => busyBtn(go, async () => {
       try { L.email = $('#lemail').value.trim(); const r = await O.login(L.email, $('#lpass').value); if (r.needVerify) { L.devCode = r.devCode; L.step = 'verify'; L.render(); return; } L.done(); } catch (e) { fail(e); }
@@ -89,9 +91,9 @@ L.render = () => {
     $('#lpass') && box.querySelector('#lpass').addEventListener('keydown', (e) => { if (e.key === 'Enter') go.click(); });
     box.append(go, err, fg);
   } else {
-    box.innerHTML = `<label>${t('Ник')}<input id="rname" class="px-input" maxlength="16" autocomplete="nickname" placeholder="${t('Например: Волк')}"></label>
+    box.insertAdjacentHTML('beforeend', `<label>${t('Ник')}<input id="rname" class="px-input" maxlength="16" autocomplete="nickname" placeholder="${t('Например: Волк')}"></label>
       <label>${t('Почта')}<input id="remail" class="px-input" type="email" autocomplete="email"></label>
-      <label>${t('Пароль')} <small>${t('от 8 символов, буквы и цифры')}</small><input id="rpass" class="px-input" type="password" autocomplete="new-password"></label>`;
+      <label>${t('Пароль')} <small>${t('от 8 символов, буквы и цифры')}</small><input id="rpass" class="px-input" type="password" autocomplete="new-password"></label>`);
     const go = el('button', 'px-btn big green', t('Создать аккаунт'));
     go.onclick = () => busyBtn(go, async () => {
       try { L.email = $('#remail').value.trim(); const r = await O.register(L.email, $('#rpass').value, $('#rname').value.trim()); L.devCode = r.devCode; L.step = 'verify'; L.render(); } catch (e) { fail(e); }

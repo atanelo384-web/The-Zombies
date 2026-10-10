@@ -9,25 +9,49 @@
 const O = TZ.Online = { me: null, token: null, ws: null, listeners: {}, unread: 0 };
 const S = TZ.store;
 
+// The server may run behind a free tunnel whose address changes on every launch: it reports the
+// current address to the owner's Google Apps Script (TZ.DISCOVERY_URL) and the game asks there.
+S.del('serverUrl'); // the manual "server address" setting was removed
+O.found = S.get('autoServerUrl', '') || '';
+let finding = null;
+O.discover = () => finding || (finding = (async () => {
+  if (!TZ.DISCOVERY_URL) return O.found;
+  const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const to = setTimeout(() => ctl && ctl.abort(), 10000);
+  try {
+    const j = await (await fetch(TZ.DISCOVERY_URL, { cache: 'no-store', signal: ctl && ctl.signal })).json();
+    const u = String(j.url || '').trim().replace(/\/+$/, '');
+    if (/^https:\/\/[^\s/?#]+$/.test(u)) { O.found = u; S.set('autoServerUrl', u); }
+  } catch (e) { }
+  finally { clearTimeout(to); }
+  return O.found;
+})().finally(() => { finding = null; }));
+const webPlay = () => /^https?:$/.test(location.protocol) && location.pathname.startsWith('/play');
 O.base = () => {
-  const own = (S.get('serverUrl', '') || '').trim();
-  if (own) return own.replace(/\/+$/, '');
-  if (/^https?:$/.test(location.protocol) && location.pathname.startsWith('/play')) return location.origin;
-  return (TZ.SERVER_URL || '').replace(/\/+$/, '');
+  if (webPlay()) return location.origin;
+  return (TZ.SERVER_URL || O.found || '').replace(/\/+$/, '');
 };
+const canRediscover = () => !webPlay() && !TZ.SERVER_URL && !!TZ.DISCOVERY_URL;
 O.wsBase = () => O.base().replace(/^http/, 'ws');
 O.signedIn = () => !!(O.token && O.me);
 
 // ---------------------------------------------------------------- HTTP
 class ApiErr extends Error { constructor(msg, code, status) { super(msg); this.code = code; this.status = status; } }
 O.api = async (method, path, body, opt = {}) => {
-  if (!O.base()) throw new ApiErr(TZ.t('Онлайн-сервер ещё не подключён. Укажите его адрес: Настройки → Интерфейс → «Адрес онлайн-сервера».'), 'noserver', 0);
+  if (!O.base()) await O.discover();
+  const base = O.base();
+  if (!base) throw new ApiErr(TZ.t('Онлайн-сервер сейчас выключен. Попробуйте позже или играйте как гость.'), 'noserver', 0);
   const ctl = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const to = setTimeout(() => ctl && ctl.abort(), opt.timeout || 15000);
   let r;
   try {
-    r = await fetch(O.base() + path, { method, headers: Object.assign({ 'Content-Type': 'application/json' }, O.token ? { Authorization: 'Bearer ' + O.token } : {}), body: body ? JSON.stringify(body) : undefined, signal: ctl && ctl.signal });
-  } catch (e) { throw new ApiErr(TZ.t('Нет связи с сервером. Проверьте интернет.'), 'offline', 0); }
+    r = await fetch(base + path, { method, headers: Object.assign({ 'Content-Type': 'application/json' }, O.token ? { Authorization: 'Bearer ' + O.token } : {}), body: body ? JSON.stringify(body) : undefined, signal: ctl && ctl.signal });
+  } catch (e) {
+    clearTimeout(to);
+    // the server may have been restarted with a new address
+    if (!opt.retried && canRediscover() && (await O.discover()) !== base) return O.api(method, path, body, Object.assign({}, opt, { retried: true }));
+    throw new ApiErr(TZ.t('Нет связи с сервером. Проверьте интернет.'), 'offline', 0);
+  }
   finally { clearTimeout(to); }
   let j = {}; try { j = await r.json(); } catch (e) { }
   if (!r.ok) {
@@ -53,6 +77,7 @@ O.applyMe = (me) => {
   O.emit('me', me);
 };
 O.restore = async () => {
+  if (canRediscover()) await O.discover();
   const t = S.get('session', null); if (!t || !O.base()) return false;
   O.token = t;
   try { const r = await O.api('GET', '/api/me', null, { timeout: 8000, noLogout: true }); O.applyMe(r.me); TZ.Account.useOnline(); O.connect(); O.flush(); return true; }
@@ -133,7 +158,7 @@ O.connect = () => {
   O.ws = ws;
   ws.onopen = () => { wsTry = 0; O.online = true; O.emit('online', true); };
   ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch (err) { return; } if (m.t === 'me') { O.refresh(); return; } O.emit(m.t, m); O.emit('*', m); };
-  ws.onclose = () => { O.online = false; O.emit('online', false); if (O.ws === ws) O.ws = null; if (O.token) { clearTimeout(wsTimer); wsTimer = setTimeout(O.connect, Math.min(30000, 1500 * 2 ** wsTry++)); } };
+  ws.onclose = () => { O.online = false; O.emit('online', false); if (O.ws === ws) O.ws = null; if (O.token) { clearTimeout(wsTimer); wsTimer = setTimeout(async () => { if (canRediscover() && wsTry > 1) await O.discover(); O.connect(); }, Math.min(30000, 1500 * 2 ** wsTry++)); } };
   ws.onerror = () => { };
 };
 O.disconnect = () => { clearTimeout(wsTimer); if (O.ws) { const w = O.ws; O.ws = null; try { w.close(); } catch (e) { } } };
