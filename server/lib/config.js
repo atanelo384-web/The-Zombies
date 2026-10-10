@@ -19,9 +19,23 @@ function load(dir) {
   const file = path.join(dir, 'config.json');
   let c = {};
   if (fs.existsSync(file)) c = JSON.parse(fs.readFileSync(file, 'utf8'));
-  else { fs.writeFileSync(file, JSON.stringify(DEF, null, 2)); console.log('Создан config.json — заполните его и перезапустите сервер.'); }
+  else if (!process.env.RENDER && !process.env.PUBLIC_URL) { try { fs.writeFileSync(file, JSON.stringify(DEF, null, 2)); console.log('Создан config.json — заполните его и перезапустите сервер.'); } catch (e) { } }
   const cfg = Object.assign({}, DEF, c, { smtp: Object.assign({}, DEF.smtp, c.smtp), yoomoney: Object.assign({}, DEF.yoomoney, c.yoomoney) });
-  if (process.env.PORT) cfg.port = +process.env.PORT;
+  // environment variables override the file (free hosting like Render has no config file)
+  const E = process.env, list = (v) => String(v).split(/[,\s]+/).filter(Boolean);
+  if (E.PORT) cfg.port = +E.PORT;
+  if (E.PUBLIC_URL) cfg.publicUrl = E.PUBLIC_URL; else if (E.RENDER_EXTERNAL_URL) cfg.publicUrl = E.RENDER_EXTERNAL_URL;
+  if (E.RENDER || E.TRUST_PROXY) cfg.trustProxy = true;
+  if (E.ADMIN_EMAILS) cfg.adminEmails = list(E.ADMIN_EMAILS);
+  if (E.GOOGLE_CLIENT_ID) cfg.googleClientId = E.GOOGLE_CLIENT_ID;
+  if (E.APPLE_CLIENT_ID) cfg.appleClientId = E.APPLE_CLIENT_ID;
+  if (E.YOOMONEY_WALLET) cfg.yoomoney.wallet = E.YOOMONEY_WALLET;
+  if (E.YOOMONEY_SECRET) cfg.yoomoney.secret = E.YOOMONEY_SECRET;
+  if (E.SMTP_HOST) Object.assign(cfg.smtp, { host: E.SMTP_HOST, port: +(E.SMTP_PORT || 465), user: E.SMTP_USER || '', pass: E.SMTP_PASS || '', from: E.SMTP_FROM || E.SMTP_USER || '' });
+  if (E.MAIL_WEBHOOK_URL) cfg.mailWebhook = { url: E.MAIL_WEBHOOK_URL, secret: E.MAIL_WEBHOOK_SECRET || '' };
+  if (E.TURSO_URL) cfg.turso = { url: E.TURSO_URL, token: E.TURSO_TOKEN || '' };
+  if (E.SERVER_PRICE) cfg.serverPrice = +E.SERVER_PRICE;
+  cfg.downloads = Object.assign({}, cfg.downloads || {}, E.DOWNLOAD_PC ? { pc: E.DOWNLOAD_PC } : {}, E.DOWNLOAD_ANDROID ? { android: E.DOWNLOAD_ANDROID } : {}, E.DOWNLOAD_IOS ? { ios: E.DOWNLOAD_IOS } : {});
   cfg.dataDir = path.resolve(dir, cfg.dataDir);
   cfg.adminEmails = (cfg.adminEmails || []).map(e => String(e).toLowerCase());
   return cfg;

@@ -13,7 +13,14 @@ const R = require('../js/rules.js');
 
 const ROOT = __dirname;
 const cfg = require('./lib/config').load(ROOT);
-const db = require('./lib/db').open(path.join(cfg.dataDir, 'tz.db'));
+const DBFILE = path.join(cfg.dataDir, 'tz.db');
+fs.mkdirSync(cfg.dataDir, { recursive: true });
+const Backup = require('./lib/backup');
+(async () => {
+try { if (!fs.existsSync(DBFILE)) await Backup.restore(cfg, DBFILE); } catch (e) { console.error('Не удалось восстановить базу из Turso:', e.message); if (cfg.turso && cfg.turso.url) { console.error('Остановка, чтобы не затереть копию пустой базой. Проверьте TURSO_URL и TURSO_TOKEN.'); process.exit(1); } }
+const db = require('./lib/db').open(DBFILE);
+const backup = Backup.start(cfg, db, DBFILE);
+db.onWrite = () => backup.dirty();
 const mail = require('./lib/mail'); mail.init(cfg);
 
 const ctx = { db, cfg, mail, FRAMES: R.FRAMES, BGS: R.BGS, AVATARS: R.AVATARS };
@@ -151,7 +158,8 @@ function staticRoute(req, res, pathname) {
 on('GET', '/api/downloads', () => {
   const files = fs.readdirSync(DL).filter(f => !f.startsWith('.')).map(f => { const st = fs.statSync(path.join(DL, f)); return { file: f, size: st.size, date: st.mtimeMs }; });
   const pick = (re) => files.filter(f => re.test(f.file)).sort((a, b) => b.date - a.date)[0] || null;
-  return { version: R.VERSION, pc: pick(/\.(zip|exe)$/i), android: pick(/\.apk$/i), ios: pick(/\.ipa$/i), web: '/play/' };
+  const link = (k, local) => cfg.downloads && cfg.downloads[k] ? { file: cfg.downloads[k], url: cfg.downloads[k], size: 0, date: 0 } : local;
+  return { version: R.VERSION, pc: link('pc', pick(/\.(zip|exe)$/i)), android: link('android', pick(/\.apk$/i)), ios: link('ios', pick(/\.ipa$/i)), web: '/play/' };
 });
 
 // ---------------------------------------------------------------- HTTP server
@@ -201,5 +209,6 @@ srv.listen(cfg.port, () => {
 });
 // cleanup
 setInterval(() => { const now = Date.now(); db.run('DELETE FROM sessions WHERE expires < ?', now); db.run('DELETE FROM codes WHERE expires < ?', now); db.run("DELETE FROM orders WHERE status = 'new' AND created < ?", now - 7 * 864e5); }, 3600e3).unref();
-process.on('SIGINT', () => { console.log('Остановка…'); process.exit(0); });
-module.exports = { srv, ctx };
+const stop = async (sig) => { console.log('Остановка…', sig); try { await backup.now('остановка сервера'); } catch (e) { } process.exit(0); };
+process.on('SIGINT', () => stop('SIGINT')); process.on('SIGTERM', () => stop('SIGTERM'));
+})();

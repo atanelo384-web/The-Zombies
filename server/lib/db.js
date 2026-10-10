@@ -113,6 +113,7 @@ function open(file) {
       ticket_id INTEGER NOT NULL REFERENCES tickets(id) ON DELETE CASCADE,
       user_id INTEGER NOT NULL, staff INTEGER NOT NULL DEFAULT 0, text TEXT NOT NULL, created INTEGER NOT NULL
     );
+    CREATE TABLE IF NOT EXISTS worlds (sid INTEGER PRIMARY KEY, data BLOB NOT NULL, updated INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS reports (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       user_id INTEGER NOT NULL, by_id INTEGER, kind TEXT NOT NULL, detail TEXT, created INTEGER NOT NULL
@@ -122,12 +123,13 @@ function open(file) {
   // tiny helpers
   const cache = new Map();
   const st = (sql) => { let s = cache.get(sql); if (!s) { s = db.prepare(sql); cache.set(sql, s); } return s; };
-  return {
+  const api = {
     raw: db,
     get: (sql, ...a) => st(sql).get(...a),
     all: (sql, ...a) => st(sql).all(...a),
-    run: (sql, ...a) => st(sql).run(...a),
+    run: (sql, ...a) => { const r = st(sql).run(...a); if (api.onWrite) api.onWrite(); return r; },
     tx(fn) { db.exec('BEGIN IMMEDIATE'); try { const r = fn(); db.exec('COMMIT'); return r; } catch (e) { try { db.exec('ROLLBACK'); } catch (e2) { } throw e; } },
   };
+  return api;
 }
 module.exports = { open };

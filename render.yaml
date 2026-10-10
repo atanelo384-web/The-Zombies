@@ -1,0 +1,36 @@
+# One-click free hosting on Render (render.com): Dashboard → New → Blueprint → pick this repository.
+# Free plan: no card needed. The database is backed up to a free Turso database (see TURSO_*).
+services:
+  - type: web
+    name: the-zombies
+    runtime: node
+    plan: free
+    buildCommand: cd server && npm install --omit=dev
+    startCommand: node server/index.js
+    healthCheckPath: /api/config
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "22.14.0"
+      - key: ADMIN_EMAILS
+        sync: false
+      - key: TURSO_URL
+        sync: false
+      - key: TURSO_TOKEN
+        sync: false
+      - key: MAIL_WEBHOOK_URL
+        sync: false
+      - key: MAIL_WEBHOOK_SECRET
+        sync: false
+      - key: YOOMONEY_WALLET
+        sync: false
+      - key: YOOMONEY_SECRET
+        sync: false
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: DOWNLOAD_PC
+        value: https://github.com/atanelo384-web/The-Zombies/releases/download/win-latest/TheZombies-Setup-5.0.0.exe
+      - key: DOWNLOAD_ANDROID
+        value: https://github.com/atanelo384-web/The-Zombies/releases/download/android-latest/TheZombies-android.apk
+      - key: DOWNLOAD_IOS
+        value: https://github.com/atanelo384-web/The-Zombies/releases/download/ios-latest/TheZombies-unsigned.ipa

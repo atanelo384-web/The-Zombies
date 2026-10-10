@@ -18,7 +18,6 @@ module.exports = function (ctx) {
   const online = new Map();     // userId -> Set(ws)
   const rooms = new Map();      // roomId -> room
   const userRoom = new Map();   // userId -> roomId (where they play now)
-  const worldDir = path.join(cfg.dataDir, 'worlds'); fs.mkdirSync(worldDir, { recursive: true });
 
   // ---------------------------------------------------------------- presence + push
   ctx.isOnline = (uid) => online.has(uid);
@@ -56,10 +55,10 @@ module.exports = function (ctx) {
   const sendj = (ws, o) => { if (ws && ws.readyState === 1) ws.send(JSON.stringify(o)); };
   const srvRow = (id) => db.get('SELECT * FROM servers WHERE id = ?', id);
   const srvCfg = (s) => ({ serverId: s.id, name: s.name, pvp: !!s.pvp, max: s.max, diff: s.diff, seed: s.seed, tags: s.tags, descr: s.descr });
-  function worldFile(sid) { return path.join(worldDir, 's' + sid + '.json.gz'); }
-  function loadWorld(sid) { try { return zlib.gunzipSync(fs.readFileSync(worldFile(sid))).toString('utf8'); } catch (e) { return null; } }
-  function saveWorld(sid, str) { const f = worldFile(sid); fs.writeFileSync(f + '.tmp', zlib.gzipSync(str)); fs.renameSync(f + '.tmp', f); }
-  RT.deleteWorld = (sid) => { try { fs.unlinkSync(worldFile(sid)); } catch (e) { } };
+  // public server worlds live in the database (so the whole state is one backup)
+  function loadWorld(sid) { try { const r = db.get('SELECT data FROM worlds WHERE sid = ?', sid); return r ? zlib.gunzipSync(Buffer.from(r.data)).toString('utf8') : null; } catch (e) { return null; } }
+  function saveWorld(sid, str) { db.run('INSERT OR REPLACE INTO worlds (sid, data, updated) VALUES (?,?,?)', sid, zlib.gzipSync(str), Date.now()); ctx.dirty && ctx.dirty(); }
+  RT.deleteWorld = (sid) => { db.run('DELETE FROM worlds WHERE sid = ?', sid); };
 
   function canJoin(room, u) {
     if (room.kind === 'public') {

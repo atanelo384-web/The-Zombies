@@ -44,7 +44,7 @@ function dlButton(kind, info, ver) {
   if (kind === 'web') return h('a.dl.web', { href: base + (info || '/play/') }, icon, h('span.dlt', h('b', label), h('small', t('dl.websub'))), h('span.dlgo', '▶'));
   if (kind === 'ios') return h('a.dl', { href: '#/ios' }, icon, h('span.dlt', h('b', label), h('small', info ? ['v' + ver, ' · ', S.size(info.size)] : t('dl.soon'))));
   if (!info) return h('div.dl.off', { 'aria-disabled': 'true' }, icon, h('span.dlt', h('b', label), h('small', t('dl.soon'))));
-  return h('a.dl', { href: base + '/dl/' + encodeURIComponent(info.file), download: '' }, icon, h('span.dlt', h('b', label), h('small', ['v' + ver, ' · ', S.size(info.size)])));
+  return h('a.dl', { href: info.url || base + '/dl/' + encodeURIComponent(info.file), download: '' }, icon, h('span.dlt', h('b', label), h('small', info.size ? ['v' + ver, ' · ', S.size(info.size)] : ['v' + ver])));
 }
 
 S.pages.home = (main, p, ctx) => {
@@ -105,7 +105,7 @@ S.pages.ios = (main, p, ctx) => {
   S.get('/api/downloads').then((d) => {
     if (!ctx.alive()) return; S.clear(dlBox);
     dlBox.appendChild(d.ios
-      ? h('a.btn.gold.big', { href: S.base() + '/dl/' + encodeURIComponent(d.ios.file), download: '' }, t('ios.get'), h('small', ' v' + d.version + ' · ' + S.size(d.ios.size)))
+      ? h('a.btn.gold.big', { href: d.ios.url || S.base() + '/dl/' + encodeURIComponent(d.ios.file), download: '' }, t('ios.get'), h('small', ' v' + d.version + (d.ios.size ? ' · ' + S.size(d.ios.size) : '')))
       : h('div.notice', t('ios.none')));
   }).catch((e) => { if (ctx.alive()) S.clear(dlBox).appendChild(S.errorBox(e)); });
 };
