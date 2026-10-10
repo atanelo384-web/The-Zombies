@@ -20,7 +20,7 @@ services:
       - key: GOOGLE_SCRIPT_SECRET
         sync: false
       - key: YOOMONEY_WALLET
-        sync: false
+        value: "4100119626166671"
       - key: YOOMONEY_SECRET
         sync: false
       - key: GOOGLE_CLIENT_ID

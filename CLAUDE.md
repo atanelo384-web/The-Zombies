@@ -57,9 +57,9 @@ admin panel on the site, 11 languages, automatic phone/PC detection (no manual s
    - Alternative paid path (Beget VPS): `bash server/deploy/install.sh domain email`.
    Full Russian instructions for the owner: doc "The Zombies 5.0 — запуск сервера, сайта и оплаты"
    (https://claude.ai/code/artifact/8f72944a-07e5-4854-97c0-bc1db92a8a9f).
-2. **YooMoney** (owner wants you to do it in his browser): get wallet number (41001…), on
+2. **YooMoney** (owner wants you to do it in his browser): wallet number is **4100119626166671** (already in `render.yaml`); on
    https://yoomoney.ru/transfer/myservices/http-notification set URL `https://<server>/api/pay/yoomoney`,
-   enable notifications, copy the secret → env `YOOMONEY_WALLET`, `YOOMONEY_SECRET` on Render (or config.json).
+   enable notifications, copy the secret → env `YOOMONEY_SECRET` on Render (or config.json).
    The owner must type passwords / SMS codes himself. Never make payments.
 3. **Nice domain**: owner finds `*.onrender.com` ugly. Plan: free domain from DigitalPlat FreeDomain
    (`.qzz.io`, `.dpdns.org`, …) or eu.org → Render Custom Domain + CNAME. Then set `PUBLIC_URL` env.
