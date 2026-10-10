@@ -1,0 +1,10 @@
+{
+  "name": "the-zombies-server",
+  "version": "5.0.0",
+  "private": true,
+  "description": "The Zombies online server: accounts, anti-cheat, friends, clans, public servers, shop, relay",
+  "main": "index.js",
+  "scripts": { "start": "node index.js" },
+  "engines": { "node": ">=22.13" },
+  "dependencies": { "ws": "^8.18.0", "nodemailer": "^6.9.16" }
+}

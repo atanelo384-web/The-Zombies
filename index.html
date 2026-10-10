@@ -88,13 +88,9 @@
   </div></div>
 
   <div id="plist" class="modal light"><div class="mbox px-panel wide">
-    <div class="phead"><span id="plisttitle">Игроки на сервере</span> <span class="phead-r"><button class="px-btn small" id="btnClan2">Клан</button><button class="px-x" data-close="plist"></button></span></div>
+    <div class="phead"><span id="plisttitle">Игроки на сервере</span> <span class="phead-r"><button class="px-btn small" id="btnInv2">Пригласить</button><button class="px-btn small" id="btnClan2">Клан</button><button class="px-x" data-close="plist"></button></span></div>
     <div id="plistbody" class="scroll"></div>
-    <div class="phint">Нажмите на игрока, чтобы открыть его профиль. Закрыть — F3.</div>
-  </div></div>
-  <div id="clanp" class="modal light"><div class="mbox px-panel wide clanbox">
-    <div class="phead">Клан <button class="px-x" data-close="clanp"></button></div>
-    <div id="clanbody" class="scroll"></div>
+    <div class="phint">Нажмите на игрока: профиль, сообщение, в друзья, в клан. Закрыть — F3.</div>
   </div></div>
   <div id="bigmap" class="modal"><div class="mbox px-panel mapbox">
     <div class="phead">Карта мира <span class="sub inline" id="mapcoords"></span><button class="px-x" data-close="bigmap"></button></div>
@@ -108,6 +104,8 @@
       <button class="px-btn big" id="btnResume">Продолжить</button>
       <button class="px-btn big" id="btnSave">Сохранить мир</button>
       <button class="px-btn big" id="btnInvite">Пригласить друзей</button>
+      <button class="px-btn big" id="btnSocial2">Друзья и сообщения</button>
+      <button class="px-btn big" id="btnKits">Получить наборы</button>
       <button class="px-btn big" id="btnClan">Клан</button>
       <button class="px-btn big" id="btnSettings2">Настройки</button>
       <button class="px-btn big" id="btnHelp2">Как играть</button>
@@ -144,11 +142,14 @@
     <div id="tipbox" class="px-box hidden"></div>
     <nav class="mnav">
       <button class="mitem prime" data-go="worlds"><img data-ic="skull" alt=""><span><b>Одиночная игра</b><small>Бесконечный мир · сохранения · сложность</small></span></button>
-      <button class="mitem" data-go="mp"><img data-ic="globe" alt=""><span><b>Мультиплеер</b><small>ПК и телефоны вместе · голосовой чат</small></span></button>
-      <button class="mitem" data-go="profile"><img data-ic="user" alt=""><span><b>Профиль</b><small>Внешность · RN · медали</small></span></button>
+      <button class="mitem" data-go="mp"><img data-ic="globe" alt=""><span><b>Мультиплеер</b><small>Общие серверы · миры друзей · по всему миру</small></span></button>
+      <button class="mitem" id="btnSocial"><img data-ic="user" alt=""><span><b>Друзья и клан</b><small id="socsub">Друзья · сообщения · клан</small></span><em class="mbadge hidden" id="socbadge"></em></button>
+      <button class="mitem gold" data-go="shop"><img data-ic="trophy" alt=""><span><b>Магазин</b><small>Классы · наборы · донат</small></span></button>
+      <button class="mitem" data-go="profile"><img data-ic="user" alt=""><span><b>Профиль</b><small>Внешность · скины · класс · RN</small></span></button>
       <button class="mitem" data-go="achs"><img data-ic="trophy" alt=""><span><b>Достижения</b><small id="achsub">Рамки, аватары, фоны</small></span></button>
-      <button class="mitem" id="btnSettings"><img data-ic="gear" alt=""><span><b>Настройки</b><small>Звук · управление · голос · графика</small></span></button>
+      <button class="mitem" id="btnSettings"><img data-ic="gear" alt=""><span><b>Настройки</b><small>Язык · звук · управление · голос</small></span></button>
       <button class="mitem" id="btnHelp"><img data-ic="help" alt=""><span><b>Как играть</b><small>Клавиши и советы</small></span></button>
+      <button class="mitem" id="btnSupport"><img data-ic="help" alt=""><span><b>Поддержка</b><small>Вопрос, ошибка, жалоба</small></span></button>
       <button class="mitem dim" id="btnQuit"><img data-ic="exit" alt=""><span><b>Выход</b></span></button>
     </nav>
   </div>
@@ -156,22 +157,19 @@
     <div id="acccard" class="px-panel" title="Открыть профиль"></div>
     <div class="px-panel dailyp"><div class="phead small">Задания дня <span class="sub inline">обновляются каждый день</span></div><div id="dailylist"></div></div>
     <div class="px-panel news">
-      <div class="phead small"><span>Обновление <span class="gold">4.2</span> · 4.1 · 4.0</span></div>
+      <div class="phead small"><span>Обновление <span class="gold">5.0</span> · Онлайн</span></div>
       <ul class="scroll">
-        <li><b>Кланы</b> в мультиплеере: название, цвет, PvP, приглашения, клановый чат /c и соклановцы на карте</li>
-        <li><b>Вертолёты и самолёты</b>: Ми-2 и Ан-2 на аэродромах и военных базах (редко) или свой из труб</li>
-        <li><b>Лодки и катера</b>: лодку собирают у воды, катер можно только найти у озёр</li>
-        <li><b>Дома и крыши</b>: кирпичные стены, двери с кодом и без. Снаружи крыша скрывает дом, внутри исчезает</li>
-        <li><b>Умные напарники</b> сами ищут еду и воду, лечатся и отдают вам находки</li>
-        <li><b>Новый интерфейс</b> инвентаря, панели быстрого доступа и подсказок</li>
-        <li><b>Новые модели</b>: люди, зомби, звери и машины стали гладкими, без кубиков</li>
-        <li><b>Пустыня</b>: дюны, кактусы, оазисы, песчаные бури и высохшие зомби</li>
-        <li><b>Своя багги</b>: соберите в гараже и прокачайте — таран, шипы, броня, двигатель</li>
-        <li><b>Голосовой чат</b>: рядом слышно всех, с рацией — на любом расстоянии</li>
-        <li><b>Настройки</b>: переназначение клавиш, громкость по типам звука, голос, графика</li>
-        <li><b>Оружие</b>: лук, копьё, пожарный топор, ПКМ, гранатомёт, гвоздемёт, факел</li>
-        <li><b>Инструменты</b>: металлоискатель и лопата — ищите закопанные тайники</li>
-        <li><b>Исправлено</b>: свет фар, вход в дома, десятки мелочей</li>
+        <li><b>Свои серверы</b>: играйте с друзьями из любой точки мира без программ — просто пригласите их в свой мир</li>
+        <li><b>Общие серверы</b> в списке у всех игроков: название, хештеги, PvP, баны</li>
+        <li><b>Аккаунты</b>: вход по почте, Google или Apple, гость; уникальный ID, восстановление пароля по почте</li>
+        <li><b>Друзья</b>: заявки, личные сообщения, приглашения в игру прямо во время игры</li>
+        <li><b>Кланы</b> живут на сервере: чат, участники, профили, офицеры</li>
+        <li><b>21 класс</b>: охотник, медик, солдат, инженер, тень, берсерк и другие — у каждого свои умения</li>
+        <li><b>Свои скины</b>: нарисуйте персонажа по шаблону 64×64 и загрузите</li>
+        <li><b>Монеты</b> за достижения и задания дня, магазин наборов</li>
+        <li><b>Античит</b>: прогресс и рейтинг проверяет сервер, скорость и телепорты отслеживаются</li>
+        <li><b>11 языков</b> и автоопределение телефона или ПК</li>
+        <li><b>4.2</b>: кланы · <b>4.1</b>: вертолёты, самолёты, лодки, дома с крышами</li>
       </ul>
     </div>
   </div>
@@ -199,27 +197,9 @@
 
 <div id="mp" class="screen hidden">
   <div class="px-panel mppanel">
-    <div class="phead">Мультиплеер <button class="px-x" data-go="menu"></button></div>
-    <div class="mpcols">
-      <div class="mpcol">
-        <div class="flabel big">Создать сервер</div>
-        <label>Название сервера<input id="srvname" class="px-input" maxlength="28"></label>
-        <label>Мир<select id="srvworld" class="px-input"></select></label>
-        <div class="flabel">Игроков максимум</div>
-        <div class="seg" id="srvmax"><button class="px-btn" data-v="2">2</button><button class="px-btn" data-v="4">4</button><button class="px-btn sel" data-v="8">8</button><button class="px-btn" data-v="16">16</button></div>
-        <label class="chk"><input type="checkbox" id="srvpvp"><i></i> PvP: игроки могут ранить друг друга</label>
-        <label class="nbonly">Порт<input id="srvport" class="px-input" value="27015" maxlength="5"></label>
-        <button class="px-btn big green" id="btnHost">Запустить сервер</button>
-      </div>
-      <div class="mpcol">
-        <div class="flabel big">Подключиться</div>
-        <div id="srvlist" class="scroll"></div>
-        <div class="row2"><button class="px-btn" id="btnScan">Обновить список</button><button class="px-btn" id="btnSweep">Глубокий поиск в Wi-Fi</button></div>
-        <label>IP-адрес сервера<input id="joinip" class="px-input" placeholder="192.168.0.10:27015"></label>
-        <button class="px-btn big" id="btnJoinIP">Подключиться по IP</button>
-        <div class="sub" id="mpnote"></div>
-      </div>
-    </div>
+    <div class="phead">Мультиплеер <span class="sub inline" id="mpstatus"></span><button class="px-x" data-go="menu"></button></div>
+    <div class="tabs" id="mptabs"><button class="tab on" data-t="servers">Общие серверы</button><button class="tab" data-t="friends">Миры друзей</button><button class="tab" data-t="host">Открыть свой мир</button></div>
+    <div id="mpbody" class="scroll"></div>
   </div>
 </div>
 
@@ -255,13 +235,50 @@
   </div>
 </div>
 
+<div id="login" class="screen hidden">
+  <canvas id="loginfx"></canvas>
+  <div class="logincol">
+    <div class="logo small"><div class="the">THE</div><img class="logoimg" alt="ZOMBIES"><div class="zom fallback">ZOMBIES</div></div>
+    <div class="px-panel loginpanel">
+      <div class="tabs" id="logtabs"><button class="tab on" data-t="in">Вход</button><button class="tab" data-t="up">Регистрация</button></div>
+      <div id="logbody"></div>
+    </div>
+    <div class="loglang" id="loglang"></div>
+  </div>
+</div>
+<div id="shop" class="screen hidden">
+  <div class="px-panel shoppanel">
+    <div class="phead">Магазин <span class="coinbal" id="shopcoins"></span><button class="px-x" data-go="menu"></button></div>
+    <div class="tabs" id="shoptabs"><button class="tab on" data-t="classes">Классы</button><button class="tab" data-t="kits">Наборы за монеты</button><button class="tab" data-t="donate">Донат</button><button class="tab" data-t="mine">Мои наборы</button></div>
+    <div id="shopbody" class="scroll"></div>
+  </div>
+</div>
+<div id="social" class="modal top"><div class="mbox px-panel wide socbox">
+  <div class="phead"><span>Друзья и клан</span> <span class="sub inline" id="socme"></span><button class="px-x" data-close="social"></button></div>
+  <div class="tabs" id="soctabs"><button class="tab on" data-t="friends">Друзья</button><button class="tab" data-t="msgs">Сообщения</button><button class="tab" data-t="clan">Клан</button><button class="tab" data-t="find">Найти игрока</button></div>
+  <div id="socbody"></div>
+</div></div>
+<div id="support" class="modal top"><div class="mbox px-panel wide">
+  <div class="phead">Поддержка <button class="px-x" data-close="support"></button></div>
+  <div id="supbody" class="scroll"></div>
+</div></div>
+<div id="kitp" class="modal top"><div class="mbox px-panel">
+  <div class="phead">Наборы <button class="px-x" data-close="kitp"></button></div>
+  <div id="kitbody" class="scroll"></div>
+</div></div>
+<div id="gtoasts"></div>
+
 <div id="settings" class="modal top"><div class="mbox px-panel wide setbox">
   <div class="phead">Настройки <button class="px-x" data-close="settings"></button></div>
   <div class="stabs">
-    <button class="stab on" data-st="snd">Звук</button><button class="stab" data-st="gfx">Графика</button><button class="stab" data-st="ctl">Управление</button>
-    <button class="stab" data-st="voice">Голос</button><button class="stab" data-st="ui">Интерфейс</button><button class="stab" data-st="touch">Телефон</button>
+    <button class="stab on" data-st="lang">Язык</button><button class="stab" data-st="snd">Звук</button><button class="stab" data-st="gfx">Графика</button><button class="stab" data-st="ctl">Управление</button>
+    <button class="stab" data-st="voice">Голос</button><button class="stab" data-st="ui">Интерфейс</button>
   </div>
-  <div class="spage scroll show" data-sp="snd">
+  <div class="spage scroll show" data-sp="lang">
+    <div class="langgrid" id="langgrid"></div>
+    <p class="shint">Язык определяется автоматически по системе. Здесь его можно поменять.</p>
+  </div>
+  <div class="spage scroll" data-sp="snd">
     <label class="set">Общая громкость <input type="range" min="0" max="1" step="0.05" data-set="master"><b class="sval"></b></label>
     <label class="set">Музыка <input type="range" min="0" max="1" step="0.05" data-set="music"><b class="sval"></b></label>
     <label class="set">Выстрелы, удары, зомби <input type="range" min="0" max="1" step="0.05" data-set="sfx"><b class="sval"></b></label>
@@ -281,6 +298,13 @@
     <button class="px-btn" id="btnFull">Полноэкранный режим (F11)</button>
   </div>
   <div class="spage scroll" data-sp="ctl">
+    <div class="touchonly"><div class="flabel">Сенсорные кнопки</div>
+    <label class="set">Размер кнопок <input type="range" min="0.7" max="1.4" step="0.05" data-set="tSize"><b class="sval"></b></label>
+    <label class="set">Непрозрачность кнопок <input type="range" min="0.3" max="1" step="0.05" data-set="tAlpha"><b class="sval"></b></label>
+    <label class="chk"><input type="checkbox" data-set="tLeft"><i></i> Для левши: джойстик ходьбы справа, прицел слева</label>
+    <label class="chk"><input type="checkbox" data-set="aimAssist"><i></i> Помощь в прицеливании при коротком касании</label>
+    <label class="chk"><input type="checkbox" data-set="vibrate"><i></i> Вибрация при попадании по вам (Android)</label>
+      </div>
     <p class="shint">Нажмите на клавишу, чтобы назначить новую. <kbd>Esc</kbd> — отмена, <kbd>Backspace</kbd> — очистить. Можно назначить кнопки мыши 3–5.</p>
     <div id="bindlist" class="bindlist"></div>
     <div class="mbtns row"><button class="px-btn" id="btnBindReset">Сбросить по умолчанию</button></div>
@@ -300,14 +324,8 @@
     <label class="chk"><input type="checkbox" data-set="keyHints"><i></i> Подсказки клавиш внизу экрана</label>
     <label class="chk"><input type="checkbox" data-set="showNames"><i></i> Имена игроков и выживших над головой</label>
     <label class="chk"><input type="checkbox" data-set="minimap"><i></i> Мини-карта</label>
-  </div>
-  <div class="spage scroll" data-sp="touch">
-    <label class="set">Сенсорное управление <select class="px-input" data-set="touch"><option value="-1">Авто</option><option value="1">Включено</option><option value="0">Выключено</option></select></label>
-    <label class="set">Размер кнопок <input type="range" min="0.7" max="1.4" step="0.05" data-set="tSize"><b class="sval"></b></label>
-    <label class="set">Непрозрачность кнопок <input type="range" min="0.3" max="1" step="0.05" data-set="tAlpha"><b class="sval"></b></label>
-    <label class="chk"><input type="checkbox" data-set="tLeft"><i></i> Для левши: джойстик ходьбы справа, прицел слева</label>
-    <label class="chk"><input type="checkbox" data-set="aimAssist"><i></i> Помощь в прицеливании при коротком касании</label>
-    <label class="chk"><input type="checkbox" data-set="vibrate"><i></i> Вибрация при попадании по вам (Android)</label>
+    <label class="set">Адрес онлайн-сервера <input class="px-input" id="srvurl" placeholder="https://..." spellcheck="false"></label>
+    <p class="shint">Менять не нужно, если игра работает. Пусто — адрес по умолчанию.</p>
   </div>
 </div></div>
 <div id="help" class="modal top"><div class="mbox px-panel wide">
@@ -330,8 +348,17 @@
       <p><b>Металлоискатель</b> в руках пищит у закопанного тайника — копайте <b>лопатой</b>. <b>Лук</b> и <b>копьё</b> делаются руками, <b>гвоздемёт</b>, <b>гранатомёт</b> и <b>рация</b> — на верстаке. <b>Факел</b> светит и поджигает.</p>
       <p><b>Багги</b>: соберите в гараже (это дорого), затем в меню машины у гаража ставьте улучшения: двигатель I и II, таран, шипы, броня, бак, вездеходные шины, прожекторы.</p>
       <p><b>Голос</b>: игроков рядом слышно всегда. С <b>рацией</b> вас слышат все, у кого она есть. Сообщение по рации в чате: <kbd>/r</kbd> текст.</p>
-      <h3>Кланы (мультиплеер)</h3>
-      <p><kbd>K</kbd> или F3 → «Клан» — создать клан: название и цвет. Приглашение — кнопка «В клан» в списке игроков (F3). Глава меняет название, цвет, PvP клана и показ соклановцев на карте, может исключать и передавать главенство. Свои никогда не ранят друг друга. Клановый чат: <kbd>/c</kbd> текст. Название клана видно в чате и над головой.</p>
+      <h3>Онлайн (5.0)</h3>
+      <p><b>Аккаунт</b>: вход по почте, Google или Apple. У каждого игрока свой ID (например #K7F2Q9XM) — по нему вас находят друзья. Забыли пароль — код придёт на почту. Гость играет только один.</p>
+      <p><b>Играть с другом</b>: «Мультиплеер → Открыть свой мир», затем Esc → «Пригласить друзей». Друг заходит из «Миры друзей» или по приглашению — из любой страны, без VPN и программ.</p>
+      <p><b>Общие серверы</b> всегда в списке «Мультиплеер». Свой сервер покупается в магазине: владелец меняет название, хештеги, число игроков, PvP, кикает и банит на сайте.</p>
+      <p><b>Друзья</b>: нажмите на игрока (F3 или в профиле) — «Сообщение», «В друзья», «В клан». Окно «Друзья и клан»: <kbd>K</kbd>.</p>
+      <h3>Кланы</h3>
+      <p>Клан хранится на сервере: название, тег, цвет, описание, PvP, офицеры, чат клана (в игре — <kbd>/c</kbd> текст). Свои никогда не ранят друг друга, мирный клан не участвует в PvP.</p>
+      <h3>Классы и скины</h3>
+      <p><b>Класс</b> даёт постоянные умения: охотник, медик, солдат, инженер, тень, берсерк и ещё 15. Покупается за монеты — их дают за достижения, задания дня, ночи, боссов и эвакуацию.</p>
+      <p><b>Скин</b>: Профиль → Скины → «Скачать шаблон», нарисуйте в любом редакторе (64×64 PNG) и загрузите.</p>
+      <p><b>Честная игра</b>: рейтинг, монеты и достижения считает сервер. Спидхак, телепорт и подделка прогресса замечаются — за читы аккаунт блокируется.</p>
       <h3>Новое в 4.1</h3>
       <p><b>Дом</b>: вкладка «Дом» в стройке — кирпичные стены (кирпич обжигают на костре), стены с окном, двери обычные и с кодом, деревянные и бетонные крыши. Крыше нужна опора — стена рядом. <kbd>X</kbd> снимает сначала крышу.</p>
       <p><b>Вертолёт</b>: <kbd>Shift</kbd> — вверх, <kbd>Пробел</kbd> — вниз, сначала дайте винту раскрутиться. <b>Самолёт</b>: разгон по ровному месту, затем <kbd>Shift</kbd>; садитесь медленно. Свой вертолёт или самолёт собирают в гараже из труб (верстак: металл → трубы).</p>
@@ -346,7 +373,7 @@
       <p><b>Ночь</b> — с 20:30 к вам идёт орда. Стройте стены, ворота, ловушки и турели.</p>
       <p><b>Биомы.</b> В тайге холодно: нужны парка, ушанка и костёр. На болоте ночью ядовитый туман: нужен противогаз. В пустоши быстрее хочется пить. В <b>пустыне</b> днём жажда вдвое сильнее, ночью холодно, бывают песчаные бури; там чаще встречаются багги и высохшие зомби.</p>
       <p><b>Кодовые ворота</b> пропускают только тех, кто знает код. Другие игроки видят вашу базу за забором как чёрную область.</p>
-      <p><b>Аккаунт.</b> За ночи, боссов и достижения растёт RN-рейтинг и уровень. Смерть отнимает RN. Медали, рамки и фоны открываются за достижения.</p>
+      <p><b>Аккаунт.</b> За ночи, боссов и достижения растёт RN-рейтинг, уровень и монеты. Смерть отнимает RN. Медали, рамки и фоны открываются за достижения.</p>
     </div>
   </div>
 </div></div>
@@ -376,6 +403,9 @@
 <script src="js/lib/lz-string.min.js"></script>
 <script src="js/lib/qrcode.js"></script>
 <script src="js/core.js"></script>
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/rules.js"></script>
 <script src="js/data.js"></script>
 <script src="js/art_world.js"></script>
 <script src="js/art_chars.js"></script>
@@ -390,6 +420,7 @@
 <script src="js/account.js"></script>
 <script src="js/game.js"></script>
 <script src="js/clans.js"></script>
+<script src="js/online.js"></script>
 <script src="js/net.js"></script>
 <script src="js/voice.js"></script>
 <script src="js/render.js"></script>
@@ -399,6 +430,8 @@
 <script src="js/touch.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/menu.js"></script>
+<script src="js/social.js"></script>
+<script src="js/classes.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

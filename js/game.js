@@ -37,7 +37,7 @@ class Game {
     this.chests = new Map(); // client: last known chest contents
     const acc = TZ.Account.active();
     this.me = new TZ.Player(opts.pid || 'h', acc.id, acc.name);
-    this.me.look = acc.look || TZ.Chars.defaultLook();
+    this.me.look = TZ.Account.lookWithSkin ? TZ.Account.lookWithSkin() : (acc.look || TZ.Chars.defaultLook());
     this.players.set(this.me.pid, this.me);
     if (this.role === 'client') this.setupClient(opts.welcome);
     else if (opts.save) this.loadSave(opts.save);
@@ -112,7 +112,7 @@ class Game {
     }
     if (it.type === 'med') {
       if (P.hp >= P.maxHp && !P.bleeding && !(it.cure && (P.infection > 0 || P.sick > 0)) && !it.buff) { this.hint('Вы здоровы'); return; }
-      P.hp = Math.min(P.maxHp, P.hp + it.heal);
+      P.hp = Math.min(P.maxHp, P.hp + Math.round(it.heal * TZ.myPerk('heal', 1)));
       if (it.stopBleed) P.bleeding = false;
       if (it.cure) { P.infection = 0; P.sick = 0; this.msg('Заражение и отравление вылечены.', 'good'); }
       if (it.buff === 'tough') P.buffs.tough = 30;
@@ -150,7 +150,6 @@ class Game {
     const P = this.me;
     switch (type) {
       case 'vsig': TZ.Voice.onSignal(d.from, d.data); break;
-      case 'clanInvite': TZ.ClanUI.invited(this, d); break;
       case 'clanChat': this.ui.chatMsg('[клан] ' + d.name, d.text, d.color); break;
       case 'radioChat': if (this.count('walkie') || d.name === P.name) { this.ui.chatMsg('[рация] ' + d.name, d.text, '#e8b030'); TZ.audio.play('radio_on', 0.5); } break;
       case 'vstate': TZ.Voice.onState(d.from, d); break;
@@ -161,7 +160,7 @@ class Game {
         if (d.acid && P.eq.head === 'gasmask') d.n *= 0.5;
         P.damage(d.n, null, !!d.silent);
         if (d.bleed && !P.bleeding) { P.bleeding = true; this.msg('Кровотечение! Используйте бинт [Q].', 'bad'); }
-        if (d.inf && P.infection <= 0) { P.infection = 1; this.msg('Вас укусили! Заражение — нужны антибиотики.', 'bad'); }
+        if (d.inf && P.infection <= 0 && Math.random() < TZ.myPerk('infect', 1)) { P.infection = 1; this.msg('Вас укусили! Заражение — нужны антибиотики.', 'bad'); }
         if (d.chill) { P.chilled = d.chill; P.warmth = Math.max(0, P.warmth - 6); }
         if (d.dry) P.thirst = Math.max(0, P.thirst - 4);
         if (d.push != null) TZ.moveCircle(this.world, P, Math.cos(d.push) * 0.5, Math.sin(d.push) * 0.5, 'p', P.uid);
@@ -172,7 +171,7 @@ class Game {
       case 'msg': this.msg(d.t, d.kind); break;
       case 'hint': this.hint(d.t); break;
       case 'stat': this.acc(d.k, d.n); break;
-      case 'kill': this.acc('kills', 1); this.acc('k_' + d.type, 1); if (d.kind === 'melee' || d.kind === 'saw') this.acc('meleeKills', 1); if (d.kind === 'fire') this.acc('fireKills', 1); if (d.type === 'boss') TZ.Account.rn(40 * this.diff.rn, 'Бегемот'); if (this.stats) this.stats.kills++; break;
+      case 'kill': this.acc('kills', 1); this.acc('k_' + d.type, 1); if (d.kind === 'melee' || d.kind === 'saw') this.acc('meleeKills', 1); if (d.kind === 'fire') this.acc('fireKills', 1); if (d.type === 'boss') TZ.Account.rn(40 * this.diff.rn, 'Бегемот', { diff: this.diffKey }); if (this.stats) this.stats.kills++; break;
       case 'akill': this.acc('animals', 1); if (d.ak === 'bear') this.acc('bears', 1); break;
       case 'boomKills': if (d.n >= 10) this.acc('bigBoom', 1); break;
       case 'built': if (d.ok && TZ.BUILD[d.id] && TZ.BUILD[d.id].kind === 'roof') this.acc('roofs', 1);
@@ -181,8 +180,8 @@ class Game {
       case 'vehOut': if (P.vehicle) { const v = this.vehicles.find(v => v.id === P.vehicle); P.vehicle = 0; P.x = d.x; P.y = d.y; TZ.audio.play('door'); } break;
       case 'gateRes': this.ui.codeResult(d.ok, d.msg); if (d.ok) TZ.audio.play('unlock'); break;
       case 'chest': this.chests.set(d.vid ? 'v' + d.vid : d.x + ',' + d.y, d.items); this.ui.chestUpdate(d.x, d.y, d.items, d.vid); break;
-      case 'morning': if (!P.dead) { const rn = Math.round((8 + d.day * 2) * this.diff.rn); TZ.Account.rn(rn, 'ночь пережита'); this.acc('nights', 1); TZ.Account.max('maxDay', d.day); if (this.diffKey === 'hard') this.acc('hardNights', 1); } break;
-      case 'evac': TZ.Account.rn(120 * this.diff.rn, 'эвакуация'); this.acc('evac', 1); break;
+      case 'morning': if (!P.dead) { const rn = Math.round((8 + d.day * 2) * this.diff.rn); TZ.Account.rn(rn, 'ночь пережита', { day: d.day, diff: this.diffKey }); this.acc('nights', 1); TZ.Account.max('maxDay', d.day); if (this.diffKey === 'hard') this.acc('hardNights', 1); } break;
+      case 'evac': TZ.Account.rn(120 * this.diff.rn, 'эвакуация', { diff: this.diffKey }); this.acc('evac', 1); break;
       case 'quest': this.curQuest = d; break;
       case 'banner': this.ui.banner(d.title, d.sub); break;
       case 'teleport': P.x = d.x; P.y = d.y; break;
@@ -278,7 +277,7 @@ class Game {
       case 'respawned': break;
       case 'fish': {
         if (dist(p.x, p.y, d.x + .5, d.y + .5) > 3.5) return;
-        const r = Math.random(), luck = p.buffs && p.buffs.fast ? 0.05 : 0;
+        const r = Math.random() / TZ.perkOf(this, p, 'fish', 1), luck = p.buffs && p.buffs.fast ? 0.05 : 0;
         if (r < 0.62 + luck) { this.giveTo(pid, { fish: 1 + (Math.random() < 0.15 ? 1 : 0) }, d.x + .5, d.y + .5); this.toPlayer(pid, 'stat', { k: 'fish', n: 1 }); this.ev('snd', 'splash', d.x + .5, d.y + .5); }
         else if (r < 0.72) this.giveTo(pid, { junk_boot: 1 }, d.x + .5, d.y + .5);
         else if (r < 0.76) this.giveTo(pid, { [['canned', 'water', 'bandage', 'ammo9', 'parts'][(Math.random() * 5) | 0]]: 1 }, d.x + .5, d.y + .5);
@@ -335,6 +334,7 @@ class Game {
     else {
       const table = TZ.LOOT[o.loot || M.loot] || TZ.LOOT.crate;
       for (const [id, ch, a, b] of table) if (Math.random() < ch) items[id] = (items[id] || 0) + a + Math.floor(Math.random() * (b - a + 1));
+      const lk = TZ.perkOf(this, this.players.get(pid), 'loot', 0); if (lk && Math.random() < lk) { const [id, , a] = table[(Math.random() * table.length) | 0]; items[id] = (items[id] || 0) + Math.max(1, a); }
     }
     if (o.quest === 'radiopart') { items.radiopart = 1; this.quest.radioparts++; this.ev('sys', `Найдена деталь рации! (${Math.min(3, this.quest.radioparts)}/3)`, 'good'); this.ev('snd', 'quest', o.x, o.y); }
     o.looted = true; o.lootT = this.absMin(); delete o.fixed; delete o.quest;
@@ -495,7 +495,7 @@ class Game {
     if (p !== this.me) return;
     this.mode = 'dead';
     TZ.audio.play('death'); TZ.audio.setMusic('death');
-    TZ.Account.rn(-Math.round(20 * (this.diff.rn > 1 ? 1.4 : 1)), 'смерть'); this.acc('deaths', 1);
+    TZ.Account.rn(-Math.round(20 * (this.diff.rn > 1 ? 1.4 : 1)), 'смерть', { diff: this.diffKey }); this.acc('deaths', 1);
     // drop everything into a backpack at the death spot
     const items = Object.assign({}, p.inv);
     if (Object.keys(items).length) this.act('deathBag', { x: p.x, y: p.y, items });
@@ -556,7 +556,7 @@ class Game {
   vehFix(pid, d) {
     const v = this.vehicles.find(v => v.id === d.id), p = this.players.get(pid); if (!v || !p) return;
     if (dist(p.x, p.y, v.x, v.y) > 4) return;
-    if (d.what === 'repair' && v.state !== 'wreck') { v.hp = Math.min(v.T.hp, v.hp + v.T.hp * (d.garage ? 0.5 : 0.35)); this.ev('spark', v.x, v.y, 8); this.ev('snd', 'repair', v.x, v.y); this.toPlayer(pid, 'stat', { k: 'repairs', n: 1 }); }
+    if (d.what === 'repair' && v.state !== 'wreck') { v.hp = Math.min(v.T.hp, v.hp + v.T.hp * (d.garage ? 0.5 : 0.35) * TZ.perkOf(this, pid, 'repair', 1)); this.ev('spark', v.x, v.y, 8); this.ev('snd', 'repair', v.x, v.y); this.toPlayer(pid, 'stat', { k: 'repairs', n: 1 }); }
     if (d.what === 'fuel' && v.state !== 'wreck') { v.fuel = Math.min(v.T.fuel, v.fuel + 25); this.ev('snd', 'fuel', v.x, v.y); }
     if (d.what === 'wheel' && v.flat > 0) { v.flat--; this.ev('snd', 'repair', v.x, v.y); }
     if (d.what === 'battery' && !v.battery) { v.battery = true; this.ev('snd', 'repair', v.x, v.y); }
@@ -657,9 +657,10 @@ class Game {
     const id = this.buildSel, B = TZ.BUILD[id];
     const err = this.canPlace(id, x, y);
     if (err) return err;
-    if (!this.canAfford(B.cost)) return 'Не хватает ресурсов';
-    const rest = this.payLocal(B.cost);
-    this.act('build', { id, x, y, rest, paid: diffCost(B.cost, rest) });
+    const cost = this.buildCost(B);
+    if (!this.canAfford(cost)) return 'Не хватает ресурсов';
+    const rest = this.payLocal(cost);
+    this.act('build', { id, x, y, rest, paid: diffCost(cost, rest) });
     if (this.role !== 'client') { /* immediate */ }
     return null;
   }
@@ -1236,6 +1237,7 @@ class Game {
     };
   }
   save(auto, quiet) {
+    if (this.pubServer && this.role === 'host') { try { if (this.net && this.net.tr.saveWorld) this.net.tr.saveWorld(LZString.compressToBase64(JSON.stringify(this.serialize()))); } catch (e) { console.warn(e); } return true; }
     if (!this.worldId || this.role === 'client') return false;
     const ok = TZ.Saves.save(this.worldId, this.serialize());
     if (!ok) this.msg('Не удалось сохранить мир!', 'bad');
@@ -1250,7 +1252,7 @@ class Game {
     this.playerData = d.playerData || {};
     this.clans = (d.clans || []).filter(c => c && c.members && c.members.length);
     const pd = this.playerData[this.me.uid];
-    if (pd) { this.me.load(pd); this.me.look = TZ.Account.active().look || this.me.look; } else { this.me.x = this.spawnPoint.x; this.me.y = this.spawnPoint.y; }
+    if (pd) { this.me.load(pd); this.me.look = TZ.Account.lookWithSkin ? TZ.Account.lookWithSkin() : (TZ.Account.active().look || this.me.look); } else { this.me.x = this.spawnPoint.x; this.me.y = this.spawnPoint.y; }
     // pre-generate around the player so saved entities have ground
     for (let dy = -VIEW_CHUNKS; dy <= VIEW_CHUNKS; dy++) for (let dx = -VIEW_CHUNKS; dx <= VIEW_CHUNKS; dx++) this.world.chunk(Math.floor(this.me.x / CH) + dx, Math.floor(this.me.y / CH) + dy);
     this.world.pending.length = 0;

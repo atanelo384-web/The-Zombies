@@ -2,6 +2,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('tzNative', {
   quit: () => ipcRenderer.send('tz-quit'),
+  openExternal: (url) => ipcRenderer.send('tz-open', String(url)),
   fullscreen: () => ipcRenderer.send('tz-fullscreen'),
   achievement: (id) => ipcRenderer.send('tz-achievement', id),
   steamName: () => ipcRenderer.sendSync('tz-steamname'),

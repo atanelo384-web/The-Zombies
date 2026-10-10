@@ -42,140 +42,107 @@ TZ.Saves = {
 };
 const hashStr = s => { let h = 2166136261; for (const c of s) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); } return h >>> 0; };
 
-// ---------------------------------------------------------------- ranks / levels
-const RANKS = [
-  { min: -1e9, name: 'Новичок', color: '#9a9a8c' }, { min: 800, name: 'Бронза', color: '#c07a3a' }, { min: 1100, name: 'Серебро', color: '#c8d0d8' },
-  { min: 1400, name: 'Золото', color: '#f0c040' }, { min: 1800, name: 'Платина', color: '#6fe0d0' }, { min: 2300, name: 'Алмаз', color: '#7ab8ff' }, { min: 2900, name: 'Легенда', color: '#ff5a4a' },
-];
-// ---------------------------------------------------------------- achievements
-// reward: medal always; optional frame / bg / avatar
-const A = TZ.ACH = [
-  { id: 'first_blood', name: 'Первая кровь', desc: 'Убейте первого зомби', stat: 'kills', n: 1, rn: 5, medal: ['circle', '#c07a3a', 'skull'] },
-  { id: 'kills100', name: 'Мясорубка', desc: 'Убейте 100 зомби', stat: 'kills', n: 100, rn: 20, medal: ['circle', '#c8d0d8', 'skull'], frame: 'rust', avatar: 'z_walker' },
-  { id: 'kills1000', name: 'Жнец', desc: 'Убейте 1000 зомби', stat: 'kills', n: 1000, rn: 60, medal: ['star', '#f0c040', 'skull'], frame: 'blood', bg: 'horde' },
-  { id: 'kills5000', name: 'Конец света', desc: 'Убейте 5000 зомби', stat: 'kills', n: 5000, rn: 150, medal: ['star', '#ff5a4a', 'skull'], frame: 'legend' },
-  { id: 'night1', name: 'Первая ночь', desc: 'Переживите первую ночь', stat: 'nights', n: 1, rn: 5, medal: ['circle', '#7a8ab0', 'moon'] },
-  { id: 'night5', name: 'Ветеран', desc: 'Доживите до 6-го дня в одном мире', stat: 'maxDay', n: 6, rn: 25, medal: ['shield', '#c8d0d8', 'moon'], frame: 'steel' },
-  { id: 'night15', name: 'Легенда пустошей', desc: 'Доживите до 16-го дня', stat: 'maxDay', n: 16, rn: 60, medal: ['shield', '#f0c040', 'moon'], bg: 'bloodmoon' },
-  { id: 'night30', name: 'Бессмертный', desc: 'Доживите до 31-го дня', stat: 'maxDay', n: 31, rn: 120, medal: ['star', '#ff5a4a', 'moon'], frame: 'gold', bg: 'ash' },
-  { id: 'hard5', name: 'Кошмар наяву', desc: 'Переживите 5 ночей на сложности «Кошмар»', stat: 'hardNights', n: 5, rn: 80, medal: ['star', '#a02020', 'eye'], frame: 'nightmare', bg: 'inferno' },
-  { id: 'builder', name: 'Строитель', desc: 'Постройте 25 укреплений', stat: 'built', n: 25, rn: 10, medal: ['circle', '#c07a3a', 'brick'] },
-  { id: 'architect', name: 'Архитектор', desc: 'Постройте 300 укреплений', stat: 'built', n: 300, rn: 50, medal: ['shield', '#f0c040', 'brick'], bg: 'fortress', frame: 'stone' },
-  { id: 'team3', name: 'Своя команда', desc: 'Наберите 3 выживших', stat: 'recruited', n: 3, rn: 15, medal: ['circle', '#5fd0ff', 'people'] },
-  { id: 'team10', name: 'Армия', desc: 'Наберите 10 выживших', stat: 'recruited', n: 10, rn: 40, medal: ['shield', '#5fd0ff', 'people'], avatar: 'surv' },
-  { id: 'pilot', name: 'Пилот', desc: 'Пролетите 3 км на вертолёте или самолёте', stat: 'airKm', n: 3, rn: 40, medal: ['star', '#9ad8ff', 'heli'] },
-  { id: 'sailor', name: 'Капитан', desc: 'Проплывите 1 км на лодке или катере', stat: 'boatKm', n: 1, rn: 20, medal: ['circle', '#5aa0d0', 'fish'] },
-  { id: 'homebuilder', name: 'Свой дом', desc: 'Постройте 20 клеток крыши', stat: 'roofs', n: 20, rn: 25, medal: ['shield', '#c87a4a', 'brick'] },
-  { id: 'driver', name: 'Водитель', desc: 'Проедьте 1 км', stat: 'km', n: 1, rn: 10, medal: ['circle', '#c8d0d8', 'wheel'] },
-  { id: 'trucker', name: 'Дальнобойщик', desc: 'Проедьте 50 км', stat: 'km', n: 50, rn: 50, medal: ['star', '#f0c040', 'wheel'], bg: 'highway' },
-  { id: 'mechanic', name: 'Механик', desc: 'Почините машину 10 раз', stat: 'repairs', n: 10, rn: 20, medal: ['circle', '#e8a030', 'wrench'] },
-  { id: 'boomer', name: 'Взрывотехник', desc: 'Убейте 10 зомби одним взрывом', stat: 'bigBoom', n: 1, rn: 30, medal: ['star', '#ff8a30', 'bomb'], avatar: 'z_exploder' },
-  { id: 'boss', name: 'Убийца Бегемота', desc: 'Убейте Бегемота', stat: 'k_boss', n: 1, rn: 60, medal: ['star', '#a02020', 'skull'], frame: 'behemoth', avatar: 'z_boss' },
-  { id: 'brutes', name: 'Укротитель громил', desc: 'Убейте 25 громил', stat: 'k_brute', n: 25, rn: 30, medal: ['shield', '#7a8a60', 'fist'], avatar: 'z_brute' },
-  { id: 'soldiers', name: 'Дезертир', desc: 'Убейте 50 зомби-солдат', stat: 'k_soldier', n: 50, rn: 30, medal: ['shield', '#56643a', 'helmet'], avatar: 'z_soldier' },
-  { id: 'evac', name: 'Спасение', desc: 'Дождитесь эвакуации', stat: 'evac', n: 1, rn: 100, medal: ['star', '#7ad870', 'heli'], bg: 'heli', frame: 'hero' },
-  { id: 'polar', name: 'Полярник', desc: 'Убейте 25 ледяных зомби', stat: 'k_frozen', n: 25, rn: 25, medal: ['circle', '#9ad8ff', 'flake'], frame: 'ice', bg: 'snow', avatar: 'z_frozen' },
-  { id: 'traveler', name: 'Путешественник', desc: 'Посетите все 6 биомов', stat: 'biomeCount', n: 6, rn: 40, medal: ['star', '#7ad870', 'compass'], bg: 'swamp' },
-  { id: 'explorer', name: 'Исследователь', desc: 'Откройте 300 участков карты', stat: 'chunks', n: 300, rn: 40, medal: ['shield', '#7ab8ff', 'compass'], frame: 'toxic' },
-  { id: 'hunter', name: 'Охотник', desc: 'Добудьте 15 животных', stat: 'animals', n: 15, rn: 20, medal: ['circle', '#a07040', 'paw'], avatar: 'wolf' },
-  { id: 'bear', name: 'Медвежатник', desc: 'Убейте медведя', stat: 'bears', n: 1, rn: 30, medal: ['shield', '#6a4a30', 'paw'], avatar: 'bear' },
-  { id: 'sniper', name: 'Снайпер', desc: 'Сделайте 100 выстрелов в голову', stat: 'heads', n: 100, rn: 30, medal: ['star', '#c8d0d8', 'cross'], frame: 'sniper' },
-  { id: 'melee', name: 'Мастер ближнего боя', desc: 'Убейте 300 зомби в ближнем бою', stat: 'meleeKills', n: 300, rn: 30, medal: ['shield', '#c8d0d8', 'blade'] },
-  { id: 'pyro', name: 'Пироман', desc: 'Сожгите 150 зомби', stat: 'fireKills', n: 150, rn: 30, medal: ['star', '#ff8a30', 'flame'], frame: 'fire' },
-  { id: 'teamplay', name: 'Командный игрок', desc: 'Сыграйте в мультиплеере', stat: 'mpGames', n: 1, rn: 10, medal: ['circle', '#5fd0ff', 'people'] },
-  { id: 'duelist', name: 'Дуэлянт', desc: 'Победите 10 игроков в PvP', stat: 'pvpKills', n: 10, rn: 40, medal: ['star', '#ff5a4a', 'blade'], frame: 'duel' },
-  { id: 'cook', name: 'Повар', desc: 'Съешьте 100 порций еды', stat: 'eaten', n: 100, rn: 10, medal: ['circle', '#e8a030', 'pot'] },
-  { id: 'digger', name: 'Кладоискатель', desc: 'Выкопайте 5 тайников металлоискателем и лопатой', stat: 'caches', n: 5, rn: 25, medal: ['shield', '#d8b050', 'spade'] },
-  { id: 'mechanic2', name: 'Безумный Макс', desc: 'Поставьте 5 улучшений на багги', stat: 'vehMods', n: 5, rn: 40, medal: ['star', '#e05030', 'wheel'] },
-  { id: 'fisher', name: 'Рыбак', desc: 'Поймайте 25 рыб', stat: 'fish', n: 25, rn: 20, medal: ['circle', '#5aa0d0', 'fish'], bg: 'lake' },
-  { id: 'dogfriend', name: 'Лучший друг', desc: 'Приручите собаку', stat: 'dogs', n: 1, rn: 15, medal: ['circle', '#c08040', 'paw'], avatar: 'dog' },
-  { id: 'foreman', name: 'Прораб', desc: 'Улучшите молотком 20 стен', stat: 'upgrades', n: 20, rn: 20, medal: ['shield', '#a0a8b0', 'brick'] },
-  { id: 'daily7', name: 'Каждый день', desc: 'Выполните все задания дня 7 раз', stat: 'dailySets', n: 7, rn: 40, medal: ['star', '#7ad870', 'check'], frame: 'daily' },
-  { id: 'pocket', name: 'Карманный выживший', desc: 'Сыграйте на телефоне или планшете', stat: 'touchGames', n: 1, rn: 5, medal: ['circle', '#9ad0ff', 'phone'] },
-  { id: 'crossplay', name: 'Без границ', desc: 'Сыграйте на одном сервере с игроком на другом устройстве (ПК + телефон)', stat: 'crossplay', n: 1, rn: 20, medal: ['star', '#5fd0ff', 'phone'], frame: 'cross' },
-  { id: 'lumber', name: 'Лесоруб', desc: 'Срубите 100 деревьев', stat: 'trees', n: 100, rn: 15, medal: ['circle', '#7a5030', 'axe'], frame: 'wood2' },
-];
-// ---------------------------------------------------------------- cosmetics
-TZ.FRAMES = {
-  none: { name: 'Без рамки', free: 1 }, wood: { name: 'Деревянная', free: 1 }, iron: { name: 'Железная', free: 1 },
-  rust: { name: 'Ржавая' }, steel: { name: 'Стальная' }, stone: { name: 'Каменная' }, wood2: { name: 'Лесная' }, blood: { name: 'Кровавая' }, gold: { name: 'Золотая' },
-  ice: { name: 'Ледяная' }, fire: { name: 'Огненная', anim: 1 }, toxic: { name: 'Токсичная', anim: 1 }, behemoth: { name: 'Бегемот' }, nightmare: { name: 'Кошмар', anim: 1 },
-  hero: { name: 'Герой' }, sniper: { name: 'Прицел' }, duel: { name: 'Дуэлянт' }, legend: { name: 'Легенда', anim: 1 },
-  daily: { name: 'Упорство' }, cross: { name: 'Без границ', anim: 1 },
-};
-TZ.BGS = {
-  dusk: { name: 'Сумерки', free: 1 }, forest: { name: 'Осенний лес', free: 1 }, snow: { name: 'Тайга' }, highway: { name: 'Трасса' }, fortress: { name: 'Крепость' },
-  bloodmoon: { name: 'Кровавая луна' }, ash: { name: 'Пепелище' }, heli: { name: 'Эвакуация' }, inferno: { name: 'Преисподняя' }, swamp: { name: 'Болота' }, horde: { name: 'Орда' }, lake: { name: 'Тихое озеро' },
-};
-TZ.AVATARS = {
-  self: { name: 'Ваш персонаж', free: 1 }, look1: { name: 'Охотник', free: 1 }, look2: { name: 'Байкер', free: 1 }, look3: { name: 'Медик', free: 1 },
-  z_walker: { name: 'Ходячий' }, z_exploder: { name: 'Взрывун' }, z_boss: { name: 'Бегемот' }, z_brute: { name: 'Громила' }, z_soldier: { name: 'Солдат' }, z_frozen: { name: 'Ледяной' },
-  wolf: { name: 'Волк' }, bear: { name: 'Медведь' }, surv: { name: 'Командир' }, dog: { name: 'Пёс' },
-};
+// ---------------------------------------------------------------- shared tables (js/rules.js — the server uses the same file)
+const RU = TZ.RULES;
+const RANKS = RU.RANKS;
+const A = TZ.ACH = RU.ACH;
+TZ.FRAMES = RU.FRAMES; TZ.BGS = RU.BGS; TZ.AVATARS = RU.AVATARS; TZ.CLASSES = RU.CLASSES; TZ.CLASS = RU.CLASS;
 
 // ---------------------------------------------------------------- accounts
-const fresh = (name) => ({ id: 'u' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7), name: name || 'Выживший', created: Date.now(), look: TZ.Chars ? TZ.Chars.defaultLook() : { skin: 1, hair: 1, style: 0, outfit: 0 }, avatar: 'self', frame: 'wood', bg: 'dusk', medals: [], rn: 1000, rnPeak: 1000, stats: {}, ach: {}, history: [] });
+// Two kinds: ONLINE (stored and checked on the server — rating, coins, classes, multiplayer)
+// and GUEST (only on this device, no multiplayer, no shop). Old local accounts become the guest.
+const fresh = (name) => ({ id: 'guest', name: name || 'Гость', created: Date.now(), look: TZ.Chars ? TZ.Chars.defaultLook() : { skin: 1, hair: 1, style: 0, outfit: 0 }, avatar: 'self', frame: 'wood', bg: 'dusk', medals: [], rn: 1000, rnPeak: 1000, coins: 0, stats: {}, ach: {}, history: [], classes: ['survivor'], cls: 'survivor', kits: [], cosmetics: { frames: [], bgs: [] } });
+function loadGuest() {
+  let g = Store.read('guest');
+  if (!g) { // migrate the last used local account of older versions (once)
+    const old = Store.read('accounts'); let id = null; try { id = localStorage.getItem('tz2_last'); } catch (e) { }
+    if (old && old.length) { const o = old.find(x => x.id === id) || old[0]; g = Object.assign(fresh(o.name), o, { id: 'guest' }); Store.write('guest', g); }
+  }
+  if (g) { const f = fresh(); for (const k in f) if (g[k] === undefined) g[k] = f[k]; }
+  return g;
+}
 const Acc = TZ.Account = {
-  _list: null, _cur: null,
-  all() { if (!this._list) this._list = Store.read('accounts') || []; return this._list; },
-  persist() { Store.write('accounts', this._list || []); },
+  mode: 'none', _cur: null,
+  isOnline() { return this.mode === 'online' && !!TZ.Online.data; },
+  isGuest() { return this.mode === 'guest'; },
+  useOnline() { this.mode = 'online'; this._cur = null; },
+  useGuest() { let g = loadGuest(); if (!g) { g = fresh(); Store.write('guest', g); } this.mode = 'guest'; this._cur = g; TZ.store.set('guestMode', true); },
+  useNone() { this.mode = 'none'; this._cur = null; TZ.store.del('guestMode'); },
+  guestExists() { return !!loadGuest(); },
   active() {
+    if (this.mode === 'online' && TZ.Online.data) return TZ.Online.data;
     if (this._cur) return this._cur;
-    let id = null; try { id = sessionStorage.getItem('tz2_active') || localStorage.getItem('tz2_last'); } catch (e) { }
-    this._cur = this.all().find(a => a.id === id) || this.all()[0] || null;
-    if (!this._cur) { this._cur = fresh(); this._cur.isNew = true; }
-    return this._cur;
+    return this._dummy || (this._dummy = fresh('Выживший'));
   },
-  hasAny() { return this.all().length > 0; },
-  create(name, look) { const a = fresh(name); if (look) a.look = look; this.all().push(a); this.persist(); this.use(a.id); return a; },
-  use(id) { const a = this.all().find(a => a.id === id); if (!a) return; this._cur = a; try { sessionStorage.setItem('tz2_active', id); localStorage.setItem('tz2_last', id); } catch (e) { } },
-  remove(id) { this._list = this.all().filter(a => a.id !== id); this.persist(); if (this._cur && this._cur.id === id) this._cur = null; },
   data() { return this.active(); },
-  // transfer between devices (PC <-> phone): a compact text code
-  exportCode(a = this.active()) { const o = Object.assign({}, a); delete o.isNew; return 'TZA2:' + LZString.compressToBase64(JSON.stringify(o)); },
-  importCode(code) {
-    code = String(code || '').trim().replace(/\s+/g, '');
-    if (!code.startsWith('TZA2:')) throw new Error('Это не код аккаунта The Zombies');
-    let o; try { o = JSON.parse(LZString.decompressFromBase64(code.slice(5))); } catch (e) { o = null; }
-    if (!o || !o.id || !o.name || !o.stats) throw new Error('Код повреждён — скопируйте его целиком');
-    const list = this.all(), i = list.findIndex(x => x.id === o.id);
-    const base = fresh(o.name); for (const k in base) if (o[k] === undefined) o[k] = base[k];
-    if (i >= 0) list[i] = o; else list.push(o);
-    this._cur = null; this.persist(); this.use(o.id); this.check && this.check();
-    return o;
+  save() { if (this.mode === 'guest' && this._cur) Store.write('guest', this._cur); },
+  // cosmetic / profile edits: online goes through the server (it checks what is unlocked)
+  async setProfile(patch) {
+    if (this.isOnline()) { try { await TZ.Online.updateMe(patch); } catch (e) { TZ.app.alert(e.message); } return; }
+    const a = this.active(); Object.assign(a, patch); this.save();
   },
-  save() { const a = this.active(); if (!this.all().includes(a)) { if (a.isNew) return; this.all().push(a); } this.persist(); },
   stat(k, n) {
     const a = this.active(); if (!n && k !== 'km') return;
-    if (k === 'km') { const g = TZ.game; if (g && g.me.vehicle) { const v = g.vehicles.find(v => v.id === g.me.vehicle); if (v && v.seats[0] === g.me.pid) { const d = v.km - (this._lastKm || v.km); this._lastKm = v.km; if (d > 0 && d < 1) { a.stats.km = (a.stats.km || 0) + d; TZ.Daily.track('km', d); } } } else this._lastKm = null; this.check(); return; }
+    if (k === 'km') { const g = TZ.game; if (g && g.me.vehicle) { const v = g.vehicles.find(v => v.id === g.me.vehicle); if (v && v.seats[0] === g.me.pid) { const d = v.km - (this._lastKm || v.km); this._lastKm = v.km; if (d > 0 && d < 1) { this.stat2('km', d); } } } else this._lastKm = null; return; }
+    this.stat2(k, n);
+  },
+  stat2(k, n) {
+    if (TZ.game && TZ.game.demo) return;
+    const a = this.active();
     a.stats[k] = (a.stats[k] || 0) + n;
-    TZ.Daily.track(k, n);
+    if (this.isOnline()) { TZ.Online.addStat(k, n); return; }
+    if (this.mode !== 'guest') return;
+    TZ.Daily.track(k, n); this.dirty = true; this.check();
+  },
+  max(k, v) {
+    const a = this.active(); if ((a.stats[k] || 0) >= v) return;
+    a.stats[k] = v;
+    if (this.isOnline()) { if (k === 'maxDay') TZ.Online.setMaxDay(v); return; }
     this.dirty = true; this.check();
   },
-  max(k, v) { const a = this.active(); if ((a.stats[k] || 0) < v) { a.stats[k] = v; this.dirty = true; this.check(); } },
-  biome(b) { const a = this.active(); a.stats.biomes = a.stats.biomes || {}; if (!a.stats.biomes[b]) { a.stats.biomes[b] = 1; a.stats.biomeCount = Object.keys(a.stats.biomes).length; this.dirty = true; this.check(); } },
-  rn(delta, why) {
-    const a = this.active(); delta = Math.round(delta); if (!delta) return;
+  biome(b) {
+    const a = this.active(); a.stats.biomes = a.stats.biomes || {}; if (a.stats.biomes[b]) return;
+    a.stats.biomes[b] = 1; a.stats.biomeCount = Object.keys(a.stats.biomes).length;
+    if (this.isOnline()) { TZ.Online.addBiome(+b); return; }
+    this.dirty = true; this.check();
+  },
+  // RN: online accounts only report the event — the server decides the amount
+  rn(delta, why, ev) {
+    delta = Math.round(delta); if (!delta) return;
+    if (this.isOnline()) {
+      const map = { 'ночь пережита': 'night', 'Бегемот': 'boss', 'эвакуация': 'evac', 'смерть': 'death' };
+      if (!map[why]) return; // PvP and the rest are counted by the server itself
+      TZ.Online.addEvent(Object.assign({ t: map[why] }, ev || {}));
+      if (TZ.game && TZ.game.ui) TZ.game.ui.rnToast(delta, why);
+      return;
+    }
+    if (this.mode !== 'guest') return;
+    const a = this.active();
     a.rn = Math.max(0, a.rn + delta); a.rnPeak = Math.max(a.rnPeak || 0, a.rn);
     a.history.push({ t: Date.now(), d: delta, why }); if (a.history.length > 40) a.history.shift();
     this.dirty = true;
     if (TZ.game && TZ.game.ui) TZ.game.ui.rnToast(delta, why);
     this.save();
   },
-  check() {
+  announceAch(id) {
+    const c = A.find(c => c.id === id); if (!c) return;
+    const rewards = [];
+    if (c.frame) rewards.push(TZ.t('рамка') + ' «' + TZ.t(TZ.FRAMES[c.frame].name) + '»');
+    if (c.bg) rewards.push(TZ.t('фон') + ' «' + TZ.t(TZ.BGS[c.bg].name) + '»');
+    if (c.avatar) rewards.push(TZ.t('аватар') + ' «' + TZ.t(TZ.AVATARS[c.avatar].name) + '»');
+    TZ.notify(TZ.t('Достижение') + ': ' + TZ.t(c.name), TZ.t(c.desc) + (rewards.length ? ' · ' + TZ.t('Награда') + ': ' + rewards.join(', ') : ''), { ach: c.id });
+    try { window.tzNative && window.tzNative.achievement && window.tzNative.achievement(c.id); } catch (e) { }
+  },
+  check() { // guest only: the server checks online accounts
+    if (this.mode !== 'guest') return;
     const a = this.active();
     for (const c of A) {
       if (a.ach[c.id]) continue;
       if ((a.stats[c.stat] || 0) >= c.n) {
         a.ach[c.id] = Date.now();
         if (a.medals.length < 3 && !a.medals.includes(c.id)) a.medals.push(c.id);
-        const rewards = [];
-        if (c.frame) rewards.push('рамка «' + TZ.FRAMES[c.frame].name + '»');
-        if (c.bg) rewards.push('фон «' + TZ.BGS[c.bg].name + '»');
-        if (c.avatar) rewards.push('аватар «' + TZ.AVATARS[c.avatar].name + '»');
-        if (TZ.game && TZ.game.ui) TZ.game.ui.toast('Достижение: ' + c.name, c.desc + (rewards.length ? ' · Награда: ' + rewards.join(', ') : ''), c.id);
+        this.announceAch(c.id);
         this.rn(c.rn, 'достижение');
-        try { window.tzNative && window.tzNative.achievement && window.tzNative.achievement(c.id); } catch (e) { }
       }
     }
     if (this.dirty) { this.dirty = false; clearTimeout(this._st); this._st = setTimeout(() => this.save(), 1500); }
@@ -184,63 +151,53 @@ const Acc = TZ.Account = {
     const a = this.active();
     const table = kind === 'frame' ? TZ.FRAMES : kind === 'bg' ? TZ.BGS : TZ.AVATARS;
     if (!table[id]) return false; if (table[id].free) return true;
+    if (kind === 'avatar' && id.startsWith('look')) return true;
+    const cz = a.cosmetics || {}; if (kind === 'frame' && (cz.frames || []).includes(id)) return true; if (kind === 'bg' && (cz.bgs || []).includes(id)) return true;
     return A.some(c => c[kind] === id && a.ach[c.id]);
   },
-  requirement(kind, id) { const c = A.find(c => c[kind] === id); return c ? `${c.name}: ${c.desc}` : ''; },
-  rankOf(rn) { let r = RANKS[0]; for (const k of RANKS) if (rn >= k.min) r = k; return r; },
-  levelOf(rn) { return Math.max(1, Math.floor(rn / 100)); },
+  requirement(kind, id) { const table = kind === 'frame' ? TZ.FRAMES : kind === 'bg' ? TZ.BGS : TZ.AVATARS; if (table[id] && table[id].shop) return TZ.t('Магазин') + ': ' + TZ.t(RU.PRODUCT[table[id].shop].name); const c = A.find(c => c[kind] === id); return c ? `${TZ.t(c.name)}: ${TZ.t(c.desc)}` : ''; },
+  rankOf(rn) { return RU.rankOf(rn); },
+  levelOf(rn) { return RU.levelOf(rn); },
   nextRank(rn) { return RANKS.find(k => k.min > rn) || null; },
-  elo(myRn, oppRn, win) { const E = 1 / (1 + Math.pow(10, (oppRn - myRn) / 400)); return Math.round(32 * ((win ? 1 : 0) - E)); },
+  cls() { const a = this.active(); return a.cls || 'survivor'; },
   // compact profile for other players
   profile() {
-    const a = this.active(), s = a.stats;
-    return { dev: TZ.isTouch ? 'phone' : 'pc', uid: a.id, name: a.name, look: a.look, avatar: a.avatar, frame: a.frame, bg: a.bg, medals: a.medals.slice(0, 3), rn: a.rn, rnPeak: a.rnPeak, created: a.created,
+    const a = this.active(), s = a.stats, me = TZ.Online.me;
+    return { dev: TZ.isTouch ? 'phone' : 'pc', uid: a.id, name: a.name, look: this.lookWithSkin ? this.lookWithSkin() : a.look, avatar: a.avatar, frame: a.frame, bg: a.bg, medals: (a.medals || []).slice(0, 3), rn: a.rn, rnPeak: a.rnPeak, created: a.created, cls: a.cls || 'survivor', skin: a.skin || null,
+      clan: this.isOnline() && me ? me.clan : null, guest: !this.isOnline(),
       stats: { kills: s.kills || 0, deaths: s.deaths || 0, nights: s.nights || 0, maxDay: s.maxDay || 0, built: s.built || 0, km: +(s.km || 0).toFixed(1), recruited: s.recruited || 0, animals: s.animals || 0, heads: s.heads || 0, pvpKills: s.pvpKills || 0, boss: s.k_boss || 0 }, achCount: Object.keys(a.ach).length };
   },
 };
 TZ.RANKS = RANKS;
 
-// ---------------------------------------------------------------- daily challenges (3 per day, per account)
-const DAILY_POOL = [
-  { id: 'kills', n: [40, 90, 160], t: 'Убейте {n} зомби' }, { id: 'meleeKills', n: [12, 25, 45], t: 'Убейте {n} зомби в ближнем бою' },
-  { id: 'heads', n: [6, 14, 25], t: 'Попадите в голову {n} раз' }, { id: 'built', n: [12, 30, 60], t: 'Постройте {n} укреплений' },
-  { id: 'looted', n: [8, 18, 30], t: 'Обыщите {n} тайников' }, { id: 'km', n: [1, 3, 6], t: 'Проедьте {n} км' },
-  { id: 'fish', n: [3, 6, 10], t: 'Поймайте {n} рыб' }, { id: 'trees', n: [8, 18, 30], t: 'Срубите {n} деревьев' },
-  { id: 'crafted', n: [5, 12, 20], t: 'Создайте {n} предметов' }, { id: 'eaten', n: [4, 8, 14], t: 'Поешьте {n} раз' },
-  { id: 'nights', n: [1, 1, 2], t: 'Переживите ночей: {n}' }, { id: 'animals', n: [2, 4, 6], t: 'Добудьте {n} зверей' },
-  { id: 'repairs', n: [3, 6, 10], t: 'Почините что-нибудь {n} раз' }, { id: 'fireKills', n: [5, 15, 30], t: 'Сожгите {n} зомби' },
-];
-const DAILY_RN = [8, 14, 22], DAILY_BONUS = 15;
+// ---------------------------------------------------------------- daily challenges (3 per day; online — counted by the server)
+const DAILY_POOL = RU.DAILY_POOL, DAILY_RN = RU.DAILY_RN, DAILY_BONUS = RU.DAILY_BONUS;
 const Daily = TZ.Daily = {
-  today() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); },
+  today() { const d = new Date(Date.now() + 3 * 3600e3); return d.toISOString().slice(0, 10); },
   get() {
-    const a = Acc.active(); if (!a || a.isNew) return null; const day = this.today();
-    if (!a.daily || a.daily.date !== day) {
-      let h = 2166136261; for (const ch of day + a.id) { h ^= ch.charCodeAt(0); h = Math.imul(h, 16777619) >>> 0; }
-      const R = TZ.RNG(h), pool = DAILY_POOL.slice(), tasks = [];
-      for (let tier = 0; tier < 3; tier++) { const i = (R() * pool.length) | 0, q = pool.splice(i, 1)[0]; tasks.push({ id: q.id, need: q.n[tier], got: 0, done: false, tier }); }
-      a.daily = { date: day, tasks, all: false }; Acc.dirty = true;
-    }
+    const a = Acc.active(); if (!a || Acc.mode === 'none') return null; const day = this.today();
+    if (!a.daily || a.daily.date !== day) { a.daily = RU.dailyFor(day, a.id); Acc.dirty = true; }
     return a.daily;
   },
-  text(t) { const q = DAILY_POOL.find(q => q.id === t.id); return q ? q.t.replace('{n}', t.need) : t.id; },
+  text(t) { const q = DAILY_POOL.find(q => q.id === t.id); return q ? TZ.t(q.t).replace('{n}', t.need) : t.id; },
   track(k, n) {
-    if (!n || TZ.game && TZ.game.demo) return; const d = this.get(); if (!d) return;
+    if (!n || TZ.game && TZ.game.demo || Acc.mode !== 'guest') return; const d = this.get(); if (!d) return;
     for (const t of d.tasks) {
       if (t.done || t.id !== k) continue;
       t.got = Math.min(t.need, t.got + n);
       if (t.got >= t.need - 1e-6) {
         t.done = true; Acc.rn(DAILY_RN[t.tier], 'задание дня');
-        if (TZ.game && TZ.game.ui) TZ.game.ui.toast('Задание дня выполнено', this.text(t) + ` · +${DAILY_RN[t.tier]} RN`, null);
+        TZ.notify(TZ.t('Задание дня выполнено'), this.text(t) + ` · +${DAILY_RN[t.tier]} RN`);
         TZ.audio && TZ.audio.play('unlock');
       }
     }
-    if (!d.all && d.tasks.every(t => t.done)) { d.all = true; Acc.rn(DAILY_BONUS, 'все задания дня'); Acc.stat('dailySets', 1); if (TZ.game && TZ.game.ui) TZ.game.ui.toast('Все задания дня!', `Бонус +${DAILY_BONUS} RN. Новые задания — завтра.`, null); }
+    if (!d.all && d.tasks.every(t => t.done)) { d.all = true; Acc.rn(DAILY_BONUS, 'все задания дня'); Acc.stat('dailySets', 1); TZ.notify(TZ.t('Все задания дня!'), TZ.t('Бонус') + ` +${DAILY_BONUS} RN`); }
     Acc.dirty = true;
   },
   html() {
     const d = this.get(); if (!d) return '';
-    return d.tasks.map(t => `<div class="dtask ${t.done ? 'done' : ''}"><span class="dtier t${t.tier}"></span><span class="dtxt">${TZ.esc(this.text(t))}</span><span class="dprog">${t.done ? '✓' : (t.id === 'km' ? t.got.toFixed(1) : Math.floor(t.got)) + '/' + t.need}</span><span class="drn">+${DAILY_RN[t.tier]}</span></div>`).join('') + `<div class="dfoot">${d.all ? 'Все выполнены! Новые задания завтра.' : `Бонус за все три: +${DAILY_BONUS} RN`}</div>`;
+    const on = Acc.isOnline();
+    return d.tasks.map(t => `<div class="dtask ${t.done ? 'done' : ''}"><span class="dtier t${t.tier}"></span><span class="dtxt">${TZ.esc(this.text(t))}</span><span class="dprog">${t.done ? '✓' : (t.id === 'km' ? (+t.got).toFixed(1) : Math.floor(t.got)) + '/' + t.need}</span><span class="drn">+${DAILY_RN[t.tier]}${on ? ' · +' + RU.DAILY_COINS[t.tier] + '<i class="coin"></i>' : ''}</span></div>`).join('');
   },
 };
 
@@ -250,6 +207,9 @@ const cache = new Map();
 const cv = (w, h) => TZ.canvas(w, h);
 // pixel glyphs for medals (7x7)
 const GLYPH = {
+  shield: ['#######', '#.....#', '#.###.#', '#.###.#', '.#.#.#.', '..#.#..', '...#...'],
+  coin: ['..###..', '.#...#.', '#..#..#', '#.###.#', '#..#..#', '.#...#.', '..###..'],
+  globe: ['..###..', '.#.#.#.', '#######', '#..#..#', '#######', '.#.#.#.', '..###..'],
   skull: ['.#####.', '#######', '#..#..#', '#######', '.##.##.', '.#.#.#.', '.......'],
   moon: ['..###..', '.##....', '##.....', '##.....', '##.....', '.##....', '..###..'],
   eye: ['.......', '.#####.', '##...##', '#..#..#', '##...##', '.#####.', '.......'],
@@ -275,10 +235,10 @@ const GLYPH = {
   star: ['...#...', '...#...', '#######', '.#####.', '..###..', '.##.##.', '##...##'],
   check: ['.......', '......#', '.....##', '#...##.', '##.##..', '.###...', '..#....'],
 };
-Cos.medal = (id, size = 40) => {
-  const k = 'm' + id + size; if (cache.has(k)) return cache.get(k);
-  const c = A.find(a => a.id === id); if (!c) return null;
-  const [shape, color, glyph] = c.medal; const base = TZ.hex(color);
+Cos.medal = (id, size = 40) => { const c = A.find(a => a.id === id); if (!c) return null; return Cos.badge(c.medal, size, 'm' + id + size); };
+Cos.badge = (medal, size = 40, key) => {
+  const k = key || 'bd' + medal.join() + size; if (cache.has(k)) return cache.get(k);
+  const [shape, color, glyph] = medal; const base = TZ.hex(color);
   const S = 20, b = new TZ.PixelBuf(S, S);
   const dk = TZ.shade(base, -0.45), lt = TZ.shade(base, 0.35);
   // ribbon
@@ -319,6 +279,7 @@ Cos.frame = (id, size = 96, t = 0) => {
     case 'duel': ring(3, (x, y, e) => e === 0 ? [40, 10, 40] : ((x + y) % 3 ? [180, 40, 60] : [230, 200, 80])); break;
     case 'daily': ring(3, (x, y, e) => e === 0 ? [20, 50, 20] : ((x + y) % 4 < 2 ? [120, 216, 110] : [70, 150, 60])); for (const [x, y] of [[1, 1], [P - 2, 1], [1, P - 2], [P - 2, P - 2]]) b.set(x, y, [240, 255, 200]); break;
     case 'cross': ring(3, (x, y, e) => { const n = ((x * 3 + y * 2 + ph * 6) % 24) / 24; return e === 0 ? [10, 30, 50] : n < 0.5 ? [95, 208, 255] : [232, 176, 48]; }); break;
+    case 'legion': ring(3, (x, y, e) => { const n = ((x + y + ph * 3) % 12) / 12; return e === 0 ? [30, 10, 50] : e === 1 ? (n < 0.5 ? [255, 214, 90] : [200, 140, 255]) : [110, 50, 170]; }); for (const [x, y] of [[1, 1], [P - 2, 1], [1, P - 2], [P - 2, P - 2], [11, 0], [12, 0], [11, P - 1], [12, P - 1]]) b.set(x, y, [255, 240, 180]); break;
     case 'legend': ring(3, (x, y, e) => { const hue = ((x + y) * 15 + ph * 40) % 360; const c = hsl(hue, 0.8, e === 1 ? 0.7 : 0.5); return e === 0 ? [20, 20, 20] : c; }); break;
   }
   const out = b.canvas();
@@ -349,7 +310,7 @@ Cos.avatar = (id, look, size = 80) => {
 Cos.background = (id, w = 320, h = 120) => {
   const k = 'b' + id + w + h; if (cache.has(k)) return cache.get(k);
   const W = 160, Hh = 60, b = new TZ.PixelBuf(W, Hh), H = TZ.hash;
-  const sky = { dusk: [[40, 30, 60], [220, 110, 70]], forest: [[60, 70, 90], [200, 150, 90]], snow: [[90, 110, 140], [200, 214, 230]], highway: [[30, 30, 50], [170, 90, 60]], fortress: [[20, 24, 40], [90, 70, 80]], bloodmoon: [[20, 4, 6], [120, 20, 16]], ash: [[40, 36, 34], [120, 100, 80]], heli: [[70, 120, 170], [230, 210, 160]], inferno: [[40, 6, 4], [255, 120, 30]], swamp: [[40, 56, 50], [120, 140, 100]], horde: [[24, 20, 28], [140, 50, 40]], lake: [[50, 80, 120], [240, 190, 140]] }[id] || [[40, 30, 60], [220, 110, 70]];
+  const sky = { legion: [[16, 6, 34], [120, 50, 150]], dusk: [[40, 30, 60], [220, 110, 70]], forest: [[60, 70, 90], [200, 150, 90]], snow: [[90, 110, 140], [200, 214, 230]], highway: [[30, 30, 50], [170, 90, 60]], fortress: [[20, 24, 40], [90, 70, 80]], bloodmoon: [[20, 4, 6], [120, 20, 16]], ash: [[40, 36, 34], [120, 100, 80]], heli: [[70, 120, 170], [230, 210, 160]], inferno: [[40, 6, 4], [255, 120, 30]], swamp: [[40, 56, 50], [120, 140, 100]], horde: [[24, 20, 28], [140, 50, 40]], lake: [[50, 80, 120], [240, 190, 140]] }[id] || [[40, 30, 60], [220, 110, 70]];
   for (let y = 0; y < Hh; y++) { const c = TZ.mix(sky[0], sky[1], Math.pow(y / Hh, 1.3)); for (let x = 0; x < W; x++) b.set(x, y, (H(x, y, 3) < 0.04 && y < 25) ? TZ.shade(c, 0.15) : c); }
   const disc = (cx, cy, r, c) => b.disc(cx, cy, r, c);
   if (id === 'bloodmoon') disc(120, 16, 9, [200, 30, 24]);
@@ -363,6 +324,7 @@ Cos.background = (id, w = 320, h = 120) => {
   else if (id === 'heli') { ridge(42, 3, 0.05, [70, 110, 60], 7); b.rect(60, 20, 30, 10, [70, 90, 50]); b.rect(88, 23, 22, 3, [70, 90, 50]); b.rect(64, 22, 8, 5, [150, 200, 230]); b.rect(40, 18, 70, 1, [30, 30, 30]); b.disc(76, 25, 3, [240, 240, 240]); b.rect(75, 23, 2, 5, [200, 40, 30]); b.rect(73, 24, 6, 2, [200, 40, 30]); b.rect(62, 31, 24, 1, [40, 40, 40]); }
   else if (id === 'inferno' || id === 'ash') { ridge(40, 4, 0.07, id === 'inferno' ? [60, 14, 10] : [50, 46, 44], 8); for (let i = 0; i < 9; i++) { const x = (H(i, 6, 3) * W) | 0, hh = 6 + (H(i, 7, 3) * 16 | 0); b.rect(x, 44 - hh, 6 + (H(i, 8, 1) * 8 | 0), hh, [30, 26, 24]); if (id === 'inferno') for (let k = 0; k < 10; k++) b.set(x + (H(i, k, 4) * 10 | 0), 44 - hh - (H(k, i, 5) * 6 | 0), [255, 140 + (H(i, k, 6) * 80 | 0), 40]); } }
   else if (id === 'lake') { disc(110, 30, 8, [255, 210, 150]); ridge(30, 5, 0.05, [60, 80, 90], 12); ridge(36, 3, 0.09, [50, 70, 60], 13); for (let y = 42; y < Hh; y++) for (let x = 0; x < W; x++) b.set(x, y, Math.abs(x - 110) < 10 - (y - 42) * 0.3 && H(x, y, 5) < 0.5 ? [250, 200, 150] : H(x, y, 6) < 0.08 ? [120, 160, 190] : [60, 100, 140]); b.rect(20, 44, 30, 3, [100, 70, 44]); b.rect(26, 34, 2, 10, [60, 50, 40]); b.line(28, 34, 46, 30, [70, 60, 50]); b.line(46, 30, 46, 46, [200, 200, 200]); }
+  else if (id === 'legion') { for (let y = 0; y < Hh; y++) for (let x = 0; x < W; x++) if (H(x, y, 21) < 0.02) b.set(x, y, [255, 230, 160]); disc(80, 22, 11, [255, 210, 90]); disc(80, 22, 8, [255, 240, 180]); ridge(42, 3, 0.05, [40, 16, 60], 21); for (let i = 0; i < 7; i++) { const x = 12 + i * 22; b.rect(x, 30, 3, 14, [70, 30, 100]); b.rect(x - 2, 28, 7, 3, [255, 210, 90]); } }
   else if (id === 'horde') { ridge(44, 2, 0.05, [36, 30, 30], 9); for (let i = 0; i < 40; i++) { const x = (H(i, 9, 1) * W) | 0, y = 40 + (H(i, 10, 1) * 14 | 0); b.rect(x, y - 7, 3, 7, [60 + (H(i, 1, 2) * 30 | 0), 70, 50]); b.rect(x, y - 9, 3, 2, [100, 110, 80]); b.set(x + 3, y - 6, [100, 110, 80]); b.set(x + 1, y - 8, [255, 40, 30]); } }
   else { ridge(36, 4, 0.06, [60, 50, 50], 10); for (let i = 0; i < 22; i++) { const x = (H(i, 11, 1) * W) | 0, y = 46 + (H(i, 12, 1) * 8 | 0); const col = id === 'forest' ? [[220, 130, 40], [190, 60, 30], [230, 190, 60]][i % 3] : [[120, 70, 50], [90, 50, 40]][i % 2]; b.disc(x, y - 10, 6, col); b.rect(x, y - 5, 2, 6, [50, 36, 26]); } ridge(52, 1, 0.1, [40, 34, 30], 11); }
   const out = b.canvas();

@@ -115,7 +115,7 @@ class Combat {
     if (M.tree) {
       if (!W2.chop) { if (!quiet) G.hintTo(pid, 'Нужен топор или бензопила, чтобы рубить деревья'); return; }
       o.hp = (o.hp ?? M.hp) - W2.chop;
-      const n = W2.chop > 1 ? 2 : 1 + (Math.random() < 0.35 ? 1 : 0);
+      const n = (W2.chop > 1 ? 2 : 1 + (Math.random() < 0.35 ? 1 : 0)) + TZ.perkOf(G, pid, 'wood', 0);
       G.giveTo(pid, { wood: n }, o.x + .5, o.y + .5);
       G.ev('chips', o.x + .5, o.y + .5, 6, '#a77446', 14);
       if (o.t === 'pine' || o.t === 'spine') G.ev('chips', o.x + .5, o.y + .5, 3, o.t === 'spine' ? '#e8f0ff' : '#3c6a40', 30);
@@ -208,7 +208,7 @@ class Combat {
             if (b.vis) { G.fx.blood(z.x, z.y, 3, 0.8, Math.atan2(b.vy, b.vx)); dead = !b.flame; break; }
             if (b.flame) { z.burn = Math.max(z.burn || 0, 3); z.burnBy = b.owner; if (z.damage && z.kind !== 'player') z.damage(G, b.dmg, b.owner, 'fire'); continue; }
             if (z.kind === 'player') { G.hurtPlayer(z, b.dmg * 0.6, { by: b.owner }); b.pierce = 0; dead = true; break; }
-            const crit = typeof b.owner === 'string' && b.owner[0] !== 'a' && b.owner !== 't' && Math.random() < 0.1, dmg = b.dmg * (crit ? 2 : 1);
+            const crit = typeof b.owner === 'string' && b.owner[0] !== 'a' && b.owner !== 't' && Math.random() < 0.1 + TZ.perkOf(G, b.owner, 'head', 0), dmg = b.dmg * (crit ? 2 : 1);
             const a = Math.atan2(b.vy, b.vx), sc = z.T && z.T.scale ? z.T.scale * z.T.scale : 1;
             z.kx = (z.kx || 0) + Math.cos(a) * b.knock * 6 / sc; z.ky = (z.ky || 0) + Math.sin(a) * b.knock * 6 / sc;
             G.ev('blood', z.x, z.y, crit ? 10 : 5, a);

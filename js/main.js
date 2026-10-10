@@ -5,7 +5,13 @@
 (() => {
 const $ = s => document.querySelector(s);
 TZ.settings = Object.assign({ master: 0.8, music: 0.5, sfx: 0.9, amb: 0.8, uivol: 0.8, voicevol: 1, muteBg: true, shake: true, zoom: 0, fps: false, uiScale: 0, touch: -1, particles: 1, weatherFx: true, dmgNums: true, vignette: true, chatAlpha: 0.85, keyHints: true, showNames: true, minimap: true, tSize: 1, tAlpha: 0.9, tLeft: false, aimAssist: true, vibrate: true, voiceMode: 'ptt', vad: 0.35, micGain: 1, micDev: '', voice3d: true }, TZ.store.get('settings2', {}));
-const applyTouchSetting = () => { const t = TZ.settings.touch; TZ.isTouch = t === -1 || t == null ? (TZ.touchForced ?? TZ.touchAuto) : !!t; };
+TZ.settings.touch = -1; // device type is detected automatically (5.0: no manual switch)
+const applyTouchSetting = () => { TZ.isTouch = TZ.touchForced ?? TZ.touchAuto; };
+// live switch: a finger on the screen → touch controls; a real mouse / keyboard → PC controls
+const setTouch = (on) => { if (TZ.touchForced != null || TZ.isTouch === on) return; TZ.touchAuto = on; applyTouchSetting(); TZ.applyUIScale(); App.ui && App.ui.dirty && App.ui.dirty(); TZ.Touch && TZ.Touch.applySettings && TZ.Touch.applySettings(); document.body.classList.toggle('mobile', on); updateQuit(); };
+window.addEventListener('pointerdown', (e) => { if (e.pointerType === 'touch') setTouch(true); else if (e.pointerType === 'mouse' && TZ.isTouch && !TZ.isIOS && !TZ.isAndroid) setTouch(false); }, true);
+window.addEventListener('keydown', (e) => { if (TZ.isTouch && !TZ.isIOS && !TZ.isAndroid && /^Key[WASD]$/.test(e.code)) setTouch(false); }, true);
+const updateQuit = () => { const b = document.querySelector('#btnQuit'); if (b) b.classList.toggle('hidden', !!(TZ.isTouch || TZ.isIOS || TZ.isAndroid || TZ.isApp && !window.tzNative)); };
 applyTouchSetting(); TZ.applyUIScale();
 window.addEventListener('resize', () => TZ.applyUIScale());
 window.addEventListener('orientationchange', () => setTimeout(() => { TZ.applyUIScale(); App.renderer && App.renderer.resize(); }, 250));
@@ -15,6 +21,7 @@ const steps = [];
 const step = (label, fn) => steps.push([label, fn]);
 async function boot() {
   $('#ver').textContent = TZ.VERSION;
+  await TZ.langReady(); TZ.applyLang();
   const A = TZ.art;
   step('Рисуем землю...', () => { A.buildTiles(); A.buildDecor(); A.buildDecals(); });
   step('Сажаем деревья...', () => { A.buildTrees(); A.buildExtra(); });
@@ -34,13 +41,16 @@ async function boot() {
   try { const lg = TZ.UIKit.logo('ZOMBIES', 16, 11); $('#logoimg').src = lg.toDataURL(); document.body.classList.add('pxlogo'); } catch (e) { console.warn(e); }
   document.querySelectorAll('img[data-ic]').forEach(i => { i.src = TZ.UIKit.icons[i.dataset.ic] || ''; });
   document.querySelectorAll('.mitem').forEach(b => b.addEventListener('pointerenter', () => TZ.audio.play('ui_hover', 0.35)));
-  bindUI(); TZ.Menu.bind();
-  try { await TZ.Net.detect(); } catch (e) { }
+  bindUI(); TZ.Menu.bind(); TZ.Social.bind(); updateQuit();
   makeDemo();
+  $('#loadtxt').textContent = TZ.t('Подключение к серверу...');
+  let st = false; try { st = await TZ.Online.restore(); } catch (e) { }
   $('#loading').classList.add('hidden');
   App.state = 'menu';
-  if (!TZ.Account.hasAny()) TZ.Menu.setup(() => TZ.Menu.show('menu'));
-  else TZ.Menu.show('menu');
+  if (st === 'banned') { TZ.Social.Login.show(); setTimeout(() => App.alert(TZ.Online.banned), 300); }
+  else if (st) TZ.Menu.show('menu');
+  else if (TZ.store.get('guestMode', false) && TZ.Account.guestExists()) { TZ.Account.useGuest(); TZ.Menu.show('menu'); }
+  else TZ.Social.Login.show();
   requestAnimationFrame(loop);
 }
 
@@ -106,6 +116,7 @@ function enterGame(G) {
   G.camera.x = TZ.isoX(G.me.x, G.me.y); G.camera.y = TZ.isoY(G.me.x, G.me.y);
   TZ.Touch.fullscreen();
   if (TZ.isTouch) TZ.Account.stat('touchGames', 1);
+  TZ.applyClass(G);
   G.checkQuests && G.auth && G.checkQuests();
   App.state = 'game';
   TZ.audio.setMusic(G.isNight() ? 'night' : 'day');
@@ -136,6 +147,58 @@ App.startHost = async (meta, info) => {
     if (!save) G.save();
   } catch (e) { console.error(e); App.alert('Не удалось запустить сервер: ' + e.message); }
 };
+// ---------------------------------------------------------------- online worlds (through our relay server)
+App.startRelayHost = async (meta, opts) => {
+  if (!TZ.Social.needOnline()) return;
+  TZ.audio.init();
+  try {
+    const save = TZ.Saves.load(meta.id);
+    const G = new TZ.Game({ role: 'host', worldId: meta.id, meta: Object.assign({}, meta, { pvp: !!opts.pvp }), seed: meta.seed, save });
+    G.pvp = !!opts.pvp;
+    G.net = await TZ.Net.relayHost(G, Object.assign({ name: meta.name }, opts));
+    G.serverName = meta.name; G.roomCode = G.net.tr.room + ':' + G.net.tr.code;
+    G.net.tr.onDown = (why) => { if (App.game === G) G.ui.disconnected(why); };
+    enterGame(G);
+    App.ui.banner(TZ.t('МИР ОТКРЫТ'), meta.name);
+    G.msg(TZ.t('Друзья видят ваш мир в «Мультиплеер → Миры друзей». Пригласить: Esc → «Пригласить друзей».'), 'good');
+    if (!save) G.save();
+  } catch (e) { console.error(e); App.alert(TZ.t('Не удалось открыть мир') + ': ' + e.message); }
+};
+App.joinRoom = async (room, code) => {
+  if (!TZ.Social.needOnline()) return;
+  TZ.audio.init();
+  TZ.notify(TZ.t('Подключение...'), '', { ttl: 2500 });
+  try {
+    const r = await TZ.Net.relayJoin(room, code);
+    if (r.host) { // a public server with nobody in it: this device runs the world
+      const cfg = r.first.cfg || {}; let save = null;
+      if (r.first.world) { try { save = JSON.parse(LZString.decompressFromBase64(r.first.world) || r.first.world); } catch (e) { save = null; } }
+      const G = new TZ.Game({ role: 'host', meta: { name: cfg.name, diff: cfg.diff, pvp: cfg.pvp, story: false }, seed: cfg.seed, save });
+      G.pvp = !!cfg.pvp; G.pubServer = cfg.serverId; G.serverName = cfg.name;
+      G.net = new TZ.HostNet(G, r.tr, { name: cfg.name, max: cfg.max, pvp: !!cfg.pvp });
+      r.tr.onCfg = (c) => { G.pvp = !!c.pvp; G.serverName = c.name; G.net.info.name = c.name; G.net.maxPlayers = c.max; };
+      r.tr.onDown = (why) => { if (App.game === G) G.ui.disconnected(why); };
+      enterGame(G); TZ.Account.stat('mpGames', 1);
+      App.ui.banner(cfg.name || TZ.t('СЕРВЕР'), (cfg.tags || '').split(',').filter(Boolean).map(x => '#' + x).join(' '));
+      if (!save) G.save();
+      return;
+    }
+    const { net, welcome } = r;
+    const G = new TZ.Game({ role: 'client', net, pid: welcome.pid, welcome, meta: { name: welcome.name, diff: welcome.diff } });
+    G.room = room; G.pubServer = room.startsWith('s') ? +room.slice(1) : 0;
+    net.attach(G); enterGame(G);
+    TZ.Account.stat('mpGames', 1);
+    App.ui.banner(TZ.t('ПОДКЛЮЧЕНО'), welcome.name);
+  } catch (e) { console.error(e); App.alert(TZ.t('Не удалось подключиться') + ': ' + e.message); }
+};
+// the host of a public server left: reconnect, someone becomes the new host
+App.migrate = (room) => {
+  const G = App.game; if (!G) return;
+  App.ui.banner(TZ.t('СМЕНА ХОСТА'), TZ.t('Переподключение...'));
+  try { G.net && G.net.tr.close(); } catch (e) { }
+  App.game = null; App.state = 'menu'; $('#ui').classList.add('hidden');
+  setTimeout(() => App.joinRoom(room), 600 + Math.random() * 1800);
+};
 App.joinServer = async (target) => {
   TZ.audio.init();
   $('#mpnote').innerHTML = '<span class="gold">Подключение...</span>';
@@ -155,17 +218,23 @@ App.toMenu = () => {
   App.game = null; App.state = 'menu'; TZ.game = App.demo;
   $('#ui').classList.add('hidden'); $('#pause').classList.add('hidden');
   document.querySelectorAll('.modal').forEach(m => m.classList.remove('show'));
-  TZ.audio.setMusic('menu'); TZ.Account.save();
+  TZ.audio.setMusic('menu'); TZ.Account.save(); TZ.Online.flush();
   TZ.Menu.show('menu');
 };
 function setPause(p) {
   const G = App.game; if (!G) return;
   G.paused = p; $('#pause').classList.toggle('hidden', !p);
-  if (p) { $('#pausedaily').innerHTML = '<div class="phead small">Задания дня</div>' + TZ.Daily.html(); App.ui.closeInventory(); $('#btnSave').classList.toggle('hidden', G.role === 'client'); $('#btnInvite').classList.toggle('hidden', G.role !== 'host'); $('#btnClan').classList.toggle('hidden', !G.net); $('#pausenet').textContent = G.net ? (G.role === 'host' ? `Сервер: ${G.serverName} · игроков ${G.players.size}` : `Вы на сервере «${G.serverName}». Игра не останавливается.`) : ''; }
+  if (p) { $('#pausedaily').innerHTML = '<div class="phead small">Задания дня</div>' + TZ.Daily.html(); App.ui.closeInventory(); $('#btnSave').classList.toggle('hidden', G.role === 'client'); $('#btnInvite').classList.toggle('hidden', !G.net); $('#btnSocial2').classList.toggle('hidden', !TZ.Account.isOnline()); $('#btnKits').classList.toggle('hidden', !(TZ.Account.isOnline() && (TZ.Account.active().kits || []).length)); $('#btnClan').classList.toggle('hidden', !G.net); $('#pausenet').textContent = G.net ? (G.role === 'host' ? `Сервер: ${G.serverName} · игроков ${G.players.size}` : `Вы на сервере «${G.serverName}». Игра не останавливается.`) : ''; }
 }
 // ---------------------------------------------------------------- invite (links + QR for phones)
 App.invite = () => {
   const G = App.game; if (!G || !G.net) return;
+  if (G.net.tr && G.net.tr.room !== undefined || G.room) {
+    const code = G.roomCode;
+    TZ.Social.open('friends');
+    if (code) TZ.notify(TZ.t('Код вашего мира'), code + ' — ' + TZ.t('друг может ввести его в «Мультиплеер → Миры друзей»'), { ttl: 15000 });
+    return;
+  }
   const links = TZ.Net.inviteLinks(G.net), body = $('#invbody'); body.innerHTML = '';
   if (!links.length) {
     body.innerHTML = '<p>Сервер работает внутри браузера. Откройте игру во второй вкладке, создайте там другой аккаунт (Профиль → Аккаунты) и подключитесь через «Мультиплеер».</p><p class="sub">Чтобы играть с телефона, запустите сервер в версии для Windows / Mac / Linux или командой <b>node electron/server.js</b>.</p>';
@@ -223,6 +292,9 @@ function bindUI() {
   click('#btnResume', () => setPause(false));
   click('#btnSave', () => { const G = App.game; if (!G) return; if (G.save()) { $('#btnSave').textContent = 'Сохранено ✓'; setTimeout(() => $('#btnSave').textContent = 'Сохранить мир', 1500); } });
   click('#btnInvite', () => App.invite());
+  click('#btnSocial2', () => TZ.Social.open('friends'));
+  click('#btnKits', () => TZ.Social.Shop.claimKits());
+  click('#btnInv2', () => { $('#plist').classList.remove('show'); App.invite(); });
   click('#btnClan', () => { setPause(false); TZ.ClanUI.open(); }); click('#btnClan2', () => { $('#plist').classList.remove('show'); TZ.ClanUI.open(); });
   click('#btnMenu', () => App.confirm('Выйти в главное меню? Мир будет сохранён.', () => App.toMenu()));
   click('#deathrespawn', () => { $('#death').classList.remove('show'); App.game.respawn(); });
@@ -248,6 +320,13 @@ function bindUI() {
   document.querySelectorAll('.stab').forEach(b => b.addEventListener('click', () => { TZ.audio.play('ui'); document.querySelectorAll('.stab').forEach(x => x.classList.toggle('on', x === b)); document.querySelectorAll('.spage').forEach(p => p.classList.toggle('show', p.dataset.sp === b.dataset.st)); if (b.dataset.st === 'voice' && TZ.Voice) TZ.Voice.listMics(); if (b.dataset.st === 'ctl') buildBinds(); }));
   click('#btnBindReset', () => App.confirm('Вернуть все клавиши по умолчанию?', () => { TZ.input.resetBinds(); buildBinds(); App.ui && App.ui.dirty(); }));
   click('#btnMicTest', () => TZ.Voice && TZ.Voice.test());
+  // language + online server address
+  const langGrid = () => { const g = $('#langgrid'); g.innerHTML = ''; for (const [c, n] of TZ.LANGS) { const b = document.createElement('button'); b.className = 'px-btn langbtn' + (c === TZ.lang ? ' sel' : ''); b.textContent = n; b.onclick = () => { TZ.audio.play('ui'); TZ.setLang(c); }; g.append(b); } };
+  langGrid();
+  TZ.onLang = () => { langGrid(); if (App.state === 'menu' && TZ.Menu.cur && TZ.Menu.cur !== 'login') TZ.Menu.show(TZ.Menu.cur); if (App.ui) App.ui.dirty(); };
+  const su = $('#srvurl'); su.value = TZ.store.get('serverUrl', '') || '';
+  su.addEventListener('keydown', (e) => e.stopPropagation());
+  su.addEventListener('change', () => { const v = su.value.trim(); if (v && !/^https?:\/\//.test(v)) { su.value = ''; return; } TZ.store.set('serverUrl', v); TZ.Online.disconnect(); TZ.Online.restore(); });
   buildBinds(); applySettings();
 }
 // ---------------------------------------------------------------- settings helpers
@@ -311,7 +390,7 @@ function globalKeys() {
   if (I.hit('F11')) toggleFull();
   if (App.state !== 'game' || !G) return;
   if (ui.chatOpen) return;
-  const top = ['settings', 'help', 'confirm', 'pview', 'keypad', 'bigmap', 'clanp', 'plist', 'phrases', 'invite'].find(id => $('#' + id).classList.contains('show'));
+  const top = ['settings', 'help', 'confirm', 'pview', 'keypad', 'bigmap', 'social', 'support', 'kitp', 'plist', 'phrases', 'invite'].find(id => $('#' + id).classList.contains('show'));
   if (I.hit('Escape')) {
     if (top) { $('#' + top).classList.remove('show'); return; }
     if ($('#craft').classList.contains('show')) { ui.closeCraft(); return; }
@@ -322,9 +401,9 @@ function globalKeys() {
     if (G.mode === 'build') { G.exitBuild(); return; }
     setPause(!G.paused); return;
   }
-  if (top === 'keypad' || top === 'confirm' || top === 'pview' || top === 'settings') return;
+  if (top === 'keypad' || top === 'confirm' || top === 'pview' || top === 'settings' || top === 'social' || top === 'support' || top === 'kitp') return;
   if (I.act('players')) { ui.togglePlist(); return; }
-  if (I.act('clan') && G.net) { TZ.ClanUI.toggle(); return; }
+  if (I.act('clan')) { TZ.ClanUI.toggle(); return; }
   if (G.paused && !$('#craft').classList.contains('show')) return;
   if (G.mode === 'dead') return;
   if (I.act('chat')) { ui.openChat(); return; }

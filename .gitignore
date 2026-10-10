@@ -1,3 +1,7 @@
 node_modules/
 release/
 dist/
+mobile/apk-lite/keys/
+server/data/
+server/config.json
+server/node_modules/

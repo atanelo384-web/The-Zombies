@@ -3,7 +3,7 @@
 #  - iPhone:  TheZombies-unsigned.ipa — install with Sideloadly / AltStore using your Apple ID
 # Push the project to a GitHub repository, open the "Actions" tab, run "Build phone apps",
 # then download the files from the run's "Artifacts" section.
-name: Build phone apps
+name: Build apps (Android, iPhone, Windows)
 on:
   workflow_dispatch:
   push:
@@ -53,3 +53,21 @@ jobs:
           cd /tmp/pub && git init -q -b builds && git add TheZombies-unsigned.ipa
           git -c user.name=github-actions -c user.email=actions@github.com commit -qm "IPA ${GITHUB_SHA::7}"
           git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" builds
+
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - run: npx electron-builder --win nsis --x64 --publish never
+      - uses: actions/upload-artifact@v4
+        with: { name: TheZombies-windows, path: release/*.exe }
+      - name: Publish installer to the builds-win branch
+        shell: bash
+        run: |
+          mkdir -p /tmp/pubw && cp release/*.exe /tmp/pubw/
+          cd /tmp/pubw && git init -q -b builds-win && git add . 
+          git -c user.name=github-actions -c user.email=actions@github.com commit -qm "Windows ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${GITHUB_REPOSITORY}.git" builds-win

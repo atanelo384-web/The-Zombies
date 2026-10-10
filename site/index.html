@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ru" data-lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Zombies</title>
+<meta name="description" content="The Zombies — pixel-art zombie survival with online servers, friends and clans. PC, Android, iPhone and browser.">
+<meta name="theme-color" content="#0b0d09">
+<meta name="color-scheme" content="dark">
+<meta property="og:title" content="The Zombies">
+<meta property="og:description" content="Pixel-art zombie survival: build, survive the nights, play together on online servers.">
+<meta property="og:image" content="assets/icon-180.png">
+<link rel="icon" type="image/png" href="assets/icon.png">
+<link rel="apple-touch-icon" href="assets/icon-180.png">
+<link rel="preload" href="fonts/tiny5-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/press-start-2p-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/site.css">
+</head>
+<body>
+<header class="top" id="top">
+  <div class="topin">
+    <a class="brand" href="#/" aria-label="The Zombies">
+      <img src="assets/icon.png" alt="" width="36" height="36">
+      <span class="bt">THE <b>ZOMBIES</b></span>
+    </a>
+    <nav class="nav" id="nav" aria-label="Menu">
+      <a href="#/" data-nav="home" data-i18n="nav.home">Главная</a>
+      <a href="#/servers" data-nav="servers" data-i18n="nav.servers">Серверы</a>
+      <a href="#/clans" data-nav="clans" data-i18n="nav.clans">Кланы</a>
+      <a href="#/donate" data-nav="donate" data-i18n="nav.donate">Магазин</a>
+      <a href="#/support" data-nav="support" data-i18n="nav.support">Поддержка</a>
+      <a href="#/profile" data-nav="profile" data-i18n="nav.profile">Профиль</a>
+      <a href="#/admin" data-nav="admin" data-admin hidden data-i18n="nav.admin">Админка</a>
+      <a href="/play/" class="navplay" data-i18n="nav.play">Играть</a>
+    </nav>
+    <div class="tright">
+      <label class="langw" title="Language">
+        <span class="lglobe" aria-hidden="true"></span>
+        <span class="langcur" id="langcur">RU</span>
+        <select id="langsel" data-i18n-aria="ui.lang" aria-label="Language"></select>
+      </label>
+      <div id="userbox" class="userbox"></div>
+      <button type="button" id="burger" class="burger" data-i18n-aria="ui.menu" aria-label="Menu" aria-expanded="false" aria-controls="nav"><i></i><i></i><i></i></button>
+    </div>
+  </div>
+</header>
+
+<main id="main" tabindex="-1"></main>
+
+<footer class="foot">
+  <div class="wrap footin">
+    <div class="fbrand">
+      <img src="assets/icon.png" alt="" width="48" height="48">
+      <div>
+        <div class="fname">THE ZOMBIES</div>
+        <div class="fsub" data-i18n="foot.tag">Пиксельный зомби-выживач</div>
+      </div>
+    </div>
+    <nav class="flinks" aria-label="Footer">
+      <a href="#/" data-i18n="foot.download">Скачать</a>
+      <a href="/play/" data-i18n="hero.play">Играть в браузере</a>
+      <a href="#/servers" data-i18n="nav.servers">Серверы</a>
+      <a href="#/clans" data-i18n="nav.clans">Кланы</a>
+      <a href="#/donate" data-i18n="nav.donate">Магазин</a>
+      <a href="#/support" data-i18n="nav.support">Поддержка</a>
+    </nav>
+    <div class="fmeta">
+      <div><span data-i18n="foot.fonts">Шрифты</span>: Tiny5, Press Start 2P (OFL) · <span data-i18n="foot.sounds">Звуки</span>: Kenney (CC0)</div>
+      <div>© 2026 The Zombies · <span id="fver">v5</span></div>
+    </div>
+  </div>
+</footer>
+
+<div id="toasts" class="toasts" aria-live="polite"></div>
+<noscript><div class="noscript">The Zombies: please enable JavaScript.</div></noscript>
+
+<script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/px.js"></script>
+<script src="js/bg.js"></script>
+<script src="js/core.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/p_home.js"></script>
+<script src="js/p_servers.js"></script>
+<script src="js/p_donate.js"></script>
+<script src="js/p_profile.js"></script>
+<script src="js/p_clans.js"></script>
+<script src="js/p_support.js"></script>
+<script src="js/p_admin.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

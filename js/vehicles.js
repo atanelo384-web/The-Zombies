@@ -110,7 +110,7 @@ class Vehicle {
     if (!this.blocked(W, nx, ny, na, inp.uid)) { this.km += Math.hypot(nx - this.x, ny - this.y) * 1.7 / 1000; this.x = nx; this.y = ny; this.a = na; }
     else if (!this.blocked(W, this.x, this.y, na, inp.uid)) { this.a = na; this.crash(G, Math.abs(this.v)); }
     else this.crash(G, Math.abs(this.v));
-    if (running && !T.nofuel) this.fuel = Math.max(0, this.fuel - (Math.abs(thr) * 0.22 + 0.01) * dt);
+    if (running && !T.nofuel) this.fuel = Math.max(0, this.fuel - (Math.abs(thr) * 0.22 + 0.01) * dt * TZ.myPerk('fuel', 1));
     if (T.water && Math.abs(this.v) > 1.5 && Math.random() < dt * 14) G.fx.add({ x: this.x - Math.cos(this.a) * T.len * 0.5 + (Math.random() - .5) * 0.6, y: this.y - Math.sin(this.a) * T.len * 0.5 + (Math.random() - .5) * 0.6, z: 1, vx: 0, vy: 0, vz: 2, g: 0, life: 0.9, max: 0.9, c: 'rgba(230,240,245,', s: 2, type: 'smoke' });
     if (inp.horn) { this.honk = 1; if (this.hornT <= 0) { this.hornT = 0.5; G.ev('snd', 'carhorn', this.x, this.y); G.noise(this.x, this.y, 30); } } else this.honk = 0;
     this.hornT -= dt;
@@ -156,7 +156,7 @@ class Vehicle {
     const nx = this.x + Math.cos(this.a) * this.v * dt, ny = this.y + Math.sin(this.a) * this.v * dt;
     if (!this.blocked(W, nx, ny, this.a, inp.uid)) { this.km += Math.hypot(nx - this.x, ny - this.y) * 1.7 / 1000; this.x = nx; this.y = ny; }
     else this.crash(G, Math.abs(this.v));
-    if (running) this.fuel = Math.max(0, this.fuel - (Math.abs(thr) * 0.3 + 0.06 + this.alt * 0.12) * dt);
+    if (running) this.fuel = Math.max(0, this.fuel - (Math.abs(thr) * 0.3 + 0.06 + this.alt * 0.12) * dt * TZ.myPerk('fuel', 1));
     this.braking = false; this.steer += (inp.s - this.steer) * Math.min(1, dt * 6);
     if (inp.horn) { this.honk = 1; if (this.hornT <= 0) { this.hornT = 0.5; G.ev('snd', 'carhorn', this.x, this.y); } } else this.honk = 0;
     this.hornT -= dt;

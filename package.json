@@ -1,7 +1,7 @@
 {
   "name": "the-zombies",
   "productName": "The Zombies",
-  "version": "4.2.0",
+  "version": "5.0.0",
   "description": "The Zombies — изометрический пиксельный survival: строй базу, собирай команду, отбивайся от орд.",
   "main": "electron/main.js",
   "author": "bolupy",
@@ -67,7 +67,9 @@
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "shortcutName": "The Zombies"
+      "shortcutName": "The Zombies",
+      "createDesktopShortcut": true,
+      "artifactName": "TheZombies-Setup-${version}.exe"
     },
     "mac": {
       "target": [

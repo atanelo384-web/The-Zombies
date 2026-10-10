@@ -46,7 +46,7 @@ class Player {
   get sprite() { return TZ.Chars.playerSet(this.look, this.eq); }
   armor() { let a = 0; for (const s of ['head', 'body', 'back']) { const it = TZ.ITEMS[this.eq[s]]; if (it && it.armor) a += it.armor; } return Math.min(70, a) / 100; }
   warmGear() { let a = 0; for (const s of ['head', 'body']) { const it = TZ.ITEMS[this.eq[s]]; if (it && it.warm) a += it.warm; } return a; }
-  carry() { const it = TZ.ITEMS[this.eq.back]; return 40 + (it && it.carry ? it.carry : 0); }
+  carry() { const it = TZ.ITEMS[this.eq.back]; return 40 + (it && it.carry ? it.carry : 0) + (this === (TZ.game && TZ.game.me) ? TZ.myPerk('carry', 0) : 0); }
   serialize() { const o = {}; for (const k of ['x', 'y', 'hp', 'stamina', 'hunger', 'thirst', 'warmth', 'infection', 'sick', 'bleeding', 'inv', 'mags', 'hotbar', 'sel', 'eq', 'look', 'light', 'spawn']) o[k] = this[k]; return JSON.parse(JSON.stringify(o)); }
   load(d) { for (const k in d) if (d[k] !== undefined) this[k] = JSON.parse(JSON.stringify(d[k])); this.dead = false; }
   netState() { return { x: +this.x.toFixed(2), y: +this.y.toFixed(2), a: +this.ang.toFixed(2), m: this.moving ? (this.running ? 2 : 1) : 0, w: this.weapon, sw: this.swing > 0 ? 1 : 0, fl: this.flash > 0 ? 1 : 0, lt: this.light ? 1 : 0, d: this.dead ? 1 : 0, v: this.vehicle || 0, hp: Math.round(this.hp), eq: this.eq, look: this.look, rc: this.recoil > 0 ? 1 : 0 }; }
@@ -90,11 +90,11 @@ class Player {
     const len = Math.hypot(mx, my);
     this.moving = len > 0;
     const over = G.weight() > this.carry();
-    let speed = 3.1 * ((TZ.WEAPONS[this.weapon] || {}).heavy || 1) * (over ? 0.7 : 1) * W.slowAt(this.x, this.y) * (this.chilled > 0 ? 0.7 : 1);
+    let speed = 3.1 * TZ.myPerk('spd', 1) * ((TZ.WEAPONS[this.weapon] || {}).heavy || 1) * (over ? 0.7 : 1) * W.slowAt(this.x, this.y) * (this.chilled > 0 ? 0.7 : 1);
     const fast = !!this.buffs.fast;
     const sprint = this.moving && (I.on('sprint') || (I.stick && I.stick.run)) && (this.stamina > 2 || fast) && !over && !G.typing;
     this.running = sprint;
-    if (sprint) { speed *= fast ? 1.85 : 1.6; if (!fast) this.stamina -= 16 * dt; }
+    if (sprint) { speed *= fast ? 1.85 : 1.6; if (!fast) this.stamina -= 16 * dt * TZ.myPerk('stam', 1); }
     else this.stamina = Math.min(100, this.stamina + (G.nearFire(this.x, this.y) ? 22 : 13) * dt * (this.hunger > 15 ? 1 : 0.4) * (this.warmth > 25 ? 1 : 0.5));
     if (this.moving) {
       const slow = I.stick && !sprint ? Math.max(0.45, Math.min(1, I.stick.mag * 1.3)) : 1; // analog stick: walk slower with a small push
@@ -116,8 +116,8 @@ class Player {
   survival(dt, G, sprint) {
     const D = G.diff.drain, W = G.world;
     const biome = W.biomeAt(this.x, this.y);
-    this.hunger = Math.max(0, this.hunger - dt * 0.085 * D * (this.warmth < 30 ? 1.4 : 1) * (sprint ? 1.6 : 1));
-    this.thirst = Math.max(0, this.thirst - dt * 0.12 * D * (sprint ? 1.6 : 1) * (biome === 4 ? 1.5 : biome === 5 ? (G.isNight() || this.vehicle ? 1.3 : 2.1) : 1));
+    this.hunger = Math.max(0, this.hunger - dt * 0.085 * D * TZ.myPerk('hunger', 1) * (this.warmth < 30 ? 1.4 : 1) * (sprint ? 1.6 : 1));
+    this.thirst = Math.max(0, this.thirst - dt * 0.12 * D * TZ.myPerk('thirst', 1) * (sprint ? 1.6 : 1) * (biome === 4 ? 1.5 : biome === 5 ? (G.isNight() || this.vehicle ? 1.3 : 2.1) : 1));
     // warmth
     const night = G.isNight(), fire = G.nearFire(this.x, this.y);
     let cold = biome === 2 ? (night ? 1.6 : 0.9) : biome === 5 ? (night ? 0.7 : 0) : night ? 0.25 : 0; // desert nights are cold
@@ -128,6 +128,7 @@ class Player {
     const gear = this.warmGear();
     cold *= Math.max(0.05, 1 - gear / 75);
     if (this.vehicle) cold *= 0.4;
+    cold *= TZ.myPerk('cold', 1);
     if (fire) this.warmth = Math.min(100, this.warmth + dt * 6);
     else if (cold > 0) this.warmth = Math.max(0, this.warmth - dt * cold * 0.9);
     else this.warmth = Math.min(100, this.warmth + dt * 1.2);
@@ -136,7 +137,7 @@ class Player {
     if (biome === 3 && night && this.eq.head !== 'gasmask') this.sick = Math.min(100, this.sick + dt * 0.35);
     if (this.sick > 0) { this.sick = Math.max(0, this.sick - dt * 0.15); if (this.sick > 40) { this.damage(dt * 0.6, null, true); this.hunger = Math.max(0, this.hunger - dt * 0.1); } }
     if (this.hunger <= 0 || this.thirst <= 0) this.damage(dt * 1.2, null, true);
-    else if (this.hunger > 50 && this.thirst > 50 && !this.bleeding && this.infection < 1 && this.sick < 20) this.hp = Math.min(this.maxHp, this.hp + dt * 0.35);
+    else if (this.hunger > 50 && this.thirst > 50 && !this.bleeding && this.infection < 1 && this.sick < 20) this.hp = Math.min(this.maxHp, this.hp + dt * 0.35 * TZ.myPerk('regen', 1));
     if (this.bleeding) { this.damage(dt * 0.9, null, true); if (Math.random() < dt * 2) G.fx.blood(this.x, this.y, 1, 0.4); }
     if (this.infection > 0) { this.infection = Math.min(100, this.infection + dt * 0.25); if (this.infection > 30) this.damage(dt * (this.infection / 100) * 1.5, null, true); }
   }
@@ -243,7 +244,7 @@ class Zombie {
     if (this.kx || this.ky) { TZ.moveCircle(W, this, this.kx * dt, this.ky * dt, 'z'); this.kx *= Math.pow(0.002, dt); this.ky *= Math.pow(0.002, dt); if (Math.abs(this.kx) + Math.abs(this.ky) < 0.05) this.kx = this.ky = 0; }
     const tgt = G.nearestTarget(this.x, this.y);
     const dT = tgt ? dist(this.x, this.y, tgt.x, tgt.y) : 999;
-    const sight = G.isNight() ? 13 : 8.5;
+    const sight = (G.isNight() ? 13 : 8.5) * (tgt && tgt.kind === 'player' ? TZ.perkOf(G, tgt, 'stealth', 1) : 1);
     if (tgt && dT < sight) this.hunt = Math.max(this.hunt, 4);
     const hunting = this.horde || this.hunt > 0 || (G.isNight() && dT < 34);
     const under = W.get(this.x, this.y);
@@ -307,6 +308,7 @@ class Zombie {
   }
   damage(G, n, by, kind) {
     if (this.dead) return;
+    if (by) n *= TZ.perkDmg(G, by, kind, false);
     if (this.T.armor && kind === 'bullet') n *= 1 - this.T.armor;
     this.hp -= n; this.hitT = 0.09; this.hunt = Math.max(this.hunt, 8);
     if (by) this.lastHitBy = by;
@@ -573,8 +575,9 @@ class Animal {
     if (this.moving) { mvx /= l; mvy /= l; this.ang = Math.atan2(mvy, mvx); const hit = TZ.moveCircle(W, this, mvx * spd * dt * W.slowAt(this.x, this.y), mvy * spd * dt, 'p'); if (hit) this.t = 0; this.anim += dt * spd * 3; }
     this.dir = V.dirIndex(this.ang, 8);
   }
-  damage(G, n, by) {
+  damage(G, n, by, kind) {
     if (this.dead) return;
+    if (by) n *= TZ.perkDmg(G, by, kind, true);
     if (this.owner && by && G.players.get(by) && G.playerByUid(this.owner) === G.players.get(by)) return; // owners can't hurt their dog
     this.hp -= n; this.hitT = 0.1; this.angry = 12;
     if (this.hp <= 0) { this.dead = true; this.deadT = 0; G.onAnimalDeath(this, by); }

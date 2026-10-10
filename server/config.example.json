@@ -1,0 +1,12 @@
+{
+  "port": 8080,
+  "publicUrl": "https://my-domain.ru",
+  "trustProxy": true,
+  "dataDir": "data",
+  "adminEmails": ["you@mail.ru"],
+  "googleClientId": "",
+  "appleClientId": "",
+  "smtp": { "host": "smtp.beget.com", "port": 465, "secure": true, "user": "noreply@my-domain.ru", "pass": "", "from": "The Zombies <noreply@my-domain.ru>" },
+  "yoomoney": { "wallet": "41001XXXXXXXXXX", "secret": "" },
+  "serverPrice": 400
+}

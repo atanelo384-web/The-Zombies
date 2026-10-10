@@ -4,7 +4,7 @@
 'use strict';
 const TZ = window.TZ = {};
 
-TZ.VERSION = '4.2.0';
+TZ.VERSION = '5.0.0';
 TZ.TW = 32;            // iso tile width  (virtual px)
 TZ.TH = 16;            // iso tile height (virtual px)
 
@@ -119,7 +119,7 @@ TZ.BINDS = [
   ['light', 'Фонарик', ['KeyL']], ['team', 'Приказ команде', ['KeyF']], ['ping', 'Метка на карте', ['KeyG']], ['voice', 'Голос (рация, удерживать)', ['KeyZ']],
   ['inv', 'Инвентарь', ['Tab', 'KeyI']], ['craft', 'Крафт', ['KeyC']], ['build', 'Стройка', ['KeyB']], ['demolish', 'Разобрать (в стройке)', ['KeyX']],
   ['map', 'Карта мира', ['KeyM']], ['chat', 'Чат', ['KeyT', 'Enter']], ['cmd', 'Команда в чате', ['Slash']], ['phrases', 'Быстрые фразы', ['KeyV']],
-  ['players', 'Список игроков', ['F3']], ['clan', 'Клан (в мультиплеере)', ['KeyK']], ['help', 'Справка', ['F1']], ['brake', 'Ручник (в машине)', ['Space']], ['horn', 'Сигнал (в машине)', ['KeyH']],
+  ['players', 'Список игроков', ['F3']], ['clan', 'Друзья и клан', ['KeyK']], ['help', 'Справка', ['F1']], ['brake', 'Ручник (в машине)', ['Space']], ['horn', 'Сигнал (в машине)', ['KeyH']],
 ];
 TZ.defAct = {}; for (const [a, , c] of TZ.BINDS) for (const k of c) if (!TZ.defAct[k]) TZ.defAct[k] = a;
 TZ.keyName = (c) => !c ? '—' : c.startsWith('Key') ? c.slice(3) : c.startsWith('Digit') ? c.slice(5) : c.startsWith('Numpad') ? 'Num ' + c.slice(6) : ({ ArrowUp: '↑', ArrowDown: '↓', ArrowLeft: '←', ArrowRight: '→', ShiftLeft: 'Shift', ShiftRight: 'П.Shift', ControlLeft: 'Ctrl', ControlRight: 'П.Ctrl', AltLeft: 'Alt', AltRight: 'П.Alt', Space: 'Пробел', Enter: 'Enter', Tab: 'Tab', Slash: '/', Backquote: '`', CapsLock: 'Caps', Backspace: '←Bksp', Mouse3: 'Колесо', Mouse4: 'Мышь 4', Mouse5: 'Мышь 5' })[c] || c;

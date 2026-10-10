@@ -1,5 +1,5 @@
 // The Zombies — Electron entry point (desktop / Steam build)
-const { app, BrowserWindow, ipcMain, Menu } = require('electron');
+const { app, BrowserWindow, ipcMain, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 let server = null;
@@ -38,9 +38,13 @@ function createWindow() {
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false, backgroundThrottling: false },
   });
   win.loadFile(path.join(__dirname, '..', 'index.html'));
+  // links (payment, sign-in on the website) open in the normal browser; the game window never navigates away
+  win.webContents.setWindowOpenHandler(({ url }) => { if (/^https?:\/\//.test(url)) shell.openExternal(url); return { action: 'deny' }; });
+  win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('file:')) { e.preventDefault(); if (/^https?:\/\//.test(url)) shell.openExternal(url); } });
   win.once('ready-to-show', () => { win.maximize(); win.setFullScreen(true); win.show(); });
 }
 ipcMain.on('tz-quit', () => app.quit());
+ipcMain.on('tz-open', (_e, url) => { if (/^https?:\/\//.test(url)) shell.openExternal(url); });
 ipcMain.on('tz-fullscreen', () => { if (win) win.setFullScreen(!win.isFullScreen()); });
 ipcMain.on('tz-achievement', (_e, id) => { if (!steam) return; try { steam.achievement.activate(String(id).toUpperCase()); } catch (e) { } });
 ipcMain.on('tz-steamname', (e) => { try { e.returnValue = steam ? steam.localplayer.getName() : null; } catch (err) { e.returnValue = null; } });

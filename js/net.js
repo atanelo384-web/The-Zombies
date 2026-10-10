@@ -82,7 +82,85 @@ class WSClient {
   close() { this.onClose = null; try { this.ws.close(); } catch (e) { } }
 }
 
+// ---------------------------------------------------------------- online relay (our server): play with anyone, anywhere
+// One WebSocket per player. The server tells whether you host the world or join it.
+class RelayHost {
+  constructor(ws, first) {
+    this.ws = ws; this.room = first.room; this.code = first.code; this.access = first.access; this.isPublic = String(first.room).startsWith('s'); this.cfg = first.cfg || null;
+    ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch (err) { return; }
+      if (m.sys === 'join') this.onJoin && this.onJoin(m.id, m.d);
+      else if (m.sys === 'leave') { if (m.cheat && TZ.game) TZ.game.ev('sys', TZ.t('Античит выгнал игрока') + ': ' + m.cheat, 'bad'); this.onLeave && this.onLeave(m.id); }
+      else if (m.sys === 'cfg') { this.cfg = m.cfg; this.onCfg && this.onCfg(m.cfg); }
+      else if (m.sys === 'clans') this.onClans && this.onClans(m.players);
+      else if (m.sys === 'closed') { this.closedWhy = m.why; }
+      else if (m.from) this.onMsg && this.onMsg(m.from, m.d); };
+    ws.onclose = () => { this.onDown && this.onDown(this.closedWhy || TZ.t('Соединение с сервером потеряно')); };
+  }
+  sendRaw(o) { if (this.ws.readyState === 1) this.ws.send(JSON.stringify(o)); }
+  send(cid, d) { this.sendRaw({ to: cid, d }); }
+  info(o) { this.sendRaw({ info: o }); }
+  kick(cid, why) { this.sendRaw({ kick: cid, why }); }
+  pvp(w, l) { this.sendRaw({ pvp: { w, l } }); }
+  report(cid, why) { this.sendRaw({ report: { id: cid, why } }); }
+  saveWorld(str) { this.sendRaw({ save: str }); }
+  close() { this.onDown = null; try { this.ws.close(); } catch (e) { } }
+}
+class RelayClient {
+  constructor(ws, hello) {
+    this.ws = ws;
+    ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch (err) { return; }
+      if (m.sys === 'hostgone') { this.migrate = !!m.migrate; this.fire(m.migrate ? TZ.t('Хост вышел. Переподключаемся…') : TZ.t('Хост закрыл мир')); return; }
+      if (m.sys === 'kicked') { this.fire(m.why || TZ.t('Вас выгнали')); return; }
+      if (m.sys) return;
+      this.onMsg && this.onMsg(m); };
+    ws.onclose = () => this.fire(TZ.t('Соединение потеряно'));
+    this.send({ t: 'hello', d: hello });
+  }
+  fire(why) { const f = this.onClose; this.onClose = null; if (f) f(why, this.migrate); }
+  send(d) { if (this.ws.readyState === 1) this.ws.send(JSON.stringify(d)); }
+  close() { this.onClose = null; try { this.ws.close(); } catch (e) { } }
+}
+// open a relay socket. role 'host' (new private room) or a room id ('s12' public server, or a friend's room)
+N.relayOpen = (params) => new Promise((resolve, reject) => {
+  if (!TZ.Online.token) return reject(new Error(TZ.t('Войдите в аккаунт')));
+  const qs = new URLSearchParams(params).toString();
+  let ws; try { ws = new WebSocket(TZ.Online.wsBase() + '/relay?' + qs, ['tz', TZ.Online.token]); } catch (e) { return reject(e); }
+  let done = false;
+  const to = setTimeout(() => { if (!done) { done = true; try { ws.close(); } catch (e) { } reject(new Error(TZ.t('Сервер не отвечает'))); } }, 10000);
+  ws.onmessage = (e) => { let m; try { m = JSON.parse(e.data); } catch (err) { return; } if (done) return;
+    if (m.sys === 'ok') { done = true; clearTimeout(to); resolve({ ws, first: m }); }
+    else if (m.sys === 'denied') { done = true; clearTimeout(to); try { ws.close(); } catch (er) { } reject(new Error(m.why)); } };
+  ws.onerror = () => { if (!done) { done = true; clearTimeout(to); reject(new Error(TZ.t('Не удалось подключиться к серверу'))); } };
+  ws.onclose = (e) => { if (!done) { done = true; clearTimeout(to); reject(new Error(e.code === 1006 ? TZ.t('Нет доступа. Подтвердите почту или проверьте интернет.') : TZ.t('Соединение закрыто'))); } };
+});
+N.relayHost = async (G, opts) => {
+  const { ws, first } = await N.relayOpen({ role: 'host', access: opts.access || 'friends', max: opts.max || 8, pvp: opts.pvp ? 1 : 0, name: opts.name || '' });
+  const tr = new RelayHost(ws, first);
+  return new HostNet(G, tr, { name: opts.name, max: opts.max || 8, pvp: !!opts.pvp });
+};
+// join a room as a client, or become the host of a public server nobody hosts yet
+N.relayJoin = async (room, code) => {
+  const { ws, first } = await N.relayOpen(Object.assign({ room }, code ? { code } : {}));
+  if (first.host) return { host: true, tr: new RelayHost(ws, first), first };
+  const hello = { ver: TZ.VERSION, profile: TZ.Account.profile() };
+  const tr = new RelayClient(ws, hello);
+  return new Promise((resolve, reject) => {
+    const cn = new ClientNet(tr); let ok = false;
+    const to = setTimeout(() => { if (!ok) { ok = true; tr.close(); reject(new Error(TZ.t('Хост не отвечает'))); } }, 12000);
+    tr.onMsg = (m) => {
+      if (!ok) {
+        if (m.t === 'welcome') { ok = true; clearTimeout(to); resolve({ host: false, net: cn, welcome: m.d, first }); return; }
+        if (m.t === 'deny') { ok = true; clearTimeout(to); tr.close(); reject(new Error(TZ.t(m.d.why))); return; }
+        return;
+      }
+      cn.handle(m);
+    };
+    tr.onClose = (why, migrate) => { if (!ok) { ok = true; clearTimeout(to); reject(new Error(why)); } else if (cn.G) { if (migrate && TZ.app.migrate) TZ.app.migrate(room); else cn.G.ui.disconnected(why); } };
+  });
+};
+
 // ---------------------------------------------------------------- host logic
+TZ.HostNet = null;
 class HostNet {
   constructor(G, transport, info) {
     this.G = G; this.tr = transport; this.info = info; this.clients = new Map(); // cid -> {pid, player, profile, ping}
@@ -91,7 +169,9 @@ class HostNet {
     transport.onMsg = (cid, d) => this.msg(cid, d);
     transport.onLeave = (cid) => this.leave(cid);
     G.me.profile = TZ.Account.profile();
+    transport.onClans = (list) => { for (const e of list) { for (const p of G.players.values()) if (p.uid === e.id) { if (p === G.me) { if (TZ.Online.me) TZ.Online.me.clan = e.clan; p.profile = TZ.Account.profile(); } else if (p.profile) p.profile.clan = e.clan; } for (const c of this.clients.values()) if (c.profile.uid === e.id) c.profile.clan = e.clan; } this.sendPlist(); G.syncClans && G.syncClans(); };
   }
+  kickPid(pid) { for (const [cid, c] of this.clients) if (c.pid === pid) { this.tr.kick(cid, TZ.t('Хост выгнал вас')); this.leave(cid); } }
   get address() { return this.tr.address || ''; }
   join(cid, hello) {
     const G = this.G;
@@ -157,11 +237,9 @@ class HostNet {
     this.broadcast('plist', list);
     if (G.clanTouchNames) G.clanTouchNames(); this.broadcast('clans', G.clans || []);
   }
-  elo(winPid, losePid) {
-    const G = this.G, w = G.players.get(winPid), l = G.players.get(losePid); if (!w || !l) return;
-    const wr = (w === G.me ? TZ.Account.active().rn : (w.profile && w.profile.rn)) || 1000, lr = (l === G.me ? TZ.Account.active().rn : (l.profile && l.profile.rn)) || 1000;
-    const d = TZ.Account.elo(wr, lr, true);
-    G.toPlayer(winPid, 'rnDelta', { d, why: 'победа над ' + l.name }); G.toPlayer(losePid, 'rnDelta', { d: -Math.max(1, d), why: 'поражение от ' + w.name });
+  elo(winPid, losePid) { // rating for PvP is counted by the online server (only for players really in this world)
+    const cid = (pid) => pid === this.G.me.pid ? 'h' : ([...this.clients].find(([k, c]) => c.pid === pid) || [])[0];
+    const w = cid(winPid), l = cid(losePid); if (w && l && this.tr.pvp) this.tr.pvp(w, l);
   }
   tick(dt) {
     const G = this.G;
@@ -386,4 +464,5 @@ N.scanLan = async () => {
   for (const s of await N.scanTabs()) out.push(s);
   return out;
 };
+TZ.HostNet = HostNet;
 })();
