@@ -66,9 +66,9 @@ S.pages.home = (main, p, ctx) => {
   // downloads
   S.get('/api/downloads').then((d) => {
     if (!ctx.alive()) return;
-    S.clear(dl); dl.append(dlButton('pc', d.pc, d.version), dlButton('android', d.android, d.version), dlButton('ios', d.ios, d.version), dlButton('web', d.web, d.version));
+    S.clear(dl); dl.append(dlButton('pc', d.pc, d.version), dlButton('android', d.android, d.version), dlButton('ios', d.ios, d.version));
     ver.textContent = t('hero.version', { v: d.version });
-  }).catch(() => { if (!ctx.alive()) return; S.clear(dl); dl.append(dlButton('pc', null), dlButton('android', null), dlButton('ios', null), dlButton('web', '/play/')); ver.textContent = 'v5'; });
+  }).catch(() => { if (!ctx.alive()) return; S.clear(dl); dl.append(dlButton('pc', null), dlButton('android', null), dlButton('ios', null)); ver.textContent = 'v5'; });
 
   // live stats
   const keys = ['online', 'playing', 'servers', 'players', 'clans'];
@@ -101,9 +101,7 @@ S.pages.ios = (main, p, ctx) => {
     dlBox,
     h('ol.steps', steps.map((k, i) => h('li.step.panel.reveal', h('span.stepn', String(i + 1)), h('div', h('h3', t('ios.' + k)), h('p', t('ios.' + k + '.d')),
       k === 's2' ? h('a.ext', { href: 'https://www.apple.com/itunes/', target: '_blank', rel: 'noopener noreferrer' }, 'apple.com/itunes ↗') : null,
-      k === 's3' ? h('a.ext', { href: 'https://sideloadly.io/', target: '_blank', rel: 'noopener noreferrer' }, 'sideloadly.io ↗') : null)))),
-    h('div.panel.pad.alt.reveal', h('div.row.gap', S.img(PX.platform('web', 4), 'phico'), h('div', h('h3', t('ios.alt')), h('p', t('ios.alt.d')))),
-      h('a.btn.green', { href: S.base() + '/play/' }, t('hero.play'))))));
+      k === 's3' ? h('a.ext', { href: 'https://sideloadly.io/', target: '_blank', rel: 'noopener noreferrer' }, 'sideloadly.io ↗') : null)))))));
   S.get('/api/downloads').then((d) => {
     if (!ctx.alive()) return; S.clear(dlBox);
     dlBox.appendChild(d.ios

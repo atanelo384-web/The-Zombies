@@ -76,7 +76,7 @@ S.pages.paid = (main, params, ctx) => {
       if (r.order && r.order.status === 'paid') {
         S.clear(box).append(h('div.okburst', { 'aria-hidden': 'true' }, S.img(PX.badge(['star', '#8fd86a', 'check'], 96))),
           h('h1.ttl.ok', t('paid.ok')), h('p.sub', t('paid.oksub')),
-          h('div.row.center.gap', h('a.btn.green', { href: '#/profile' }, t('nav.profile')), r.order.product === 'server' ? h('a.btn.gold', { href: '#/servers' }, t('srv.mine')) : h('a.btn.ghost', { href: S.base() + '/play/' }, t('hero.play'))));
+          h('div.row.center.gap', h('a.btn.green', { href: '#/profile' }, t('nav.profile')), r.order.product === 'server' ? h('a.btn.gold', { href: '#/servers' }, t('srv.mine')) : null));
         S.loadMe(); return;
       }
       if (r.order && r.order.status === 'underpaid') { S.clear(box).append(h('h1.ttl.err', t('paid.under')), h('p.sub', t('paid.undersub')), h('a.btn.red', { href: '#/support' }, t('nav.support'))); return; }

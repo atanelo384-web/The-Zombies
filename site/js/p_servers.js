@@ -32,8 +32,7 @@ function serverCard(s, onTag, first) {
       h('span.badge.d-' + (DIFFS.includes(s.diff) ? s.diff : 'normal'), diffLabel(s.diff)),
       s.owner ? h('span.mi', t('srv.owner'), ' ', h('b', s.owner)) : null,
       s.peak ? h('span.mi', t('srv.peak', { n: s.peak })) : null),
-    list,
-    h('a.btn.small' + (live ? '.green' : '.ghost') + '.play', { href: S.base() + '/play/' }, t('srv.play')));
+    list);
 }
 
 function createDialog(price) {
@@ -109,7 +108,7 @@ function mineCard(s, reload, price) {
 S.pages.servers = (main, p, ctx) => {
   let all = null, first = true, q = '';
   const price = h('span', '400');
-  const createBtn = h('button.btn.gold.create', { type: 'button' }, t('srv.create'), ' — ', price, ' ₽');
+  const createBtn = h('button.btn.gold.create', { type: 'button' }, t('srv.create'));
   createBtn.addEventListener('click', () => createDialog(price.textContent));
   const search = S.input({ type: 'search', placeholder: t('srv.search'), 'aria-label': t('srv.search'), class: 'inp search' });
   const sum = h('span.sum');
